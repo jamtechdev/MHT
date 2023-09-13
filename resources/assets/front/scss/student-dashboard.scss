@@ -1,0 +1,327 @@
+// common student enroll
+
+.nav-link {
+    &.nav-cmn-course {
+        color: $text-light;
+    }
+}
+
+.nav-link {
+    &.nav-cmn-course.active {
+        color: $secondary;
+    }
+}
+
+.maz__courses-wrapper {
+    border-bottom: 1px solid $light;
+    padding: 40px 0;
+    display: flex;
+    flex-direction: column;
+    @include media-breakpoint-up(md){
+        flex-direction: row;
+        justify-content: start;
+    }
+    &:first-child {
+        padding-top: 20px;
+    }
+    &:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    img {
+        border-radius: 10px;
+    }
+
+    .maz__wishlist-content {
+        padding-top: 20px;
+        margin: 0;
+        @include media-breakpoint-up(sm){
+            margin-left: 18px;
+        }
+        @include media-breakpoint-up(xl){
+            margin-left: 20px;
+        }
+        @include media-breakpoint-up(xxl){
+            margin-left: 35px;
+        }
+        .maz__wishlist-wrapper{
+            display: flex;
+            flex-direction: column;
+            @include media-breakpoint-up(md){
+                justify-content: space-between;
+            }
+            @include media-breakpoint-up(xl){
+                flex-direction: column;
+            }
+            @include media-breakpoint-up(xxl){
+                flex-direction: row;
+            }
+        
+        .dashboard_btn_danger {
+            min-width: 171px;
+        }
+      } 
+    }
+    .star-rating {
+        text-align: left;
+        .fa-star {
+            color: $warning;
+            font-size: 1.75rem;
+        }
+    }
+    .maz__enroll-title {
+        font-family: $font-family-sub;
+        line-height: 28px;
+        color: #000;
+        font-size: 1.25rem;
+        @include media-breakpoint-up(md){
+            font-size: 1.5rem;
+        }
+    }
+    .maz__lesson-content{
+        display: flex;
+        flex-direction: column;
+        @include media-breakpoint-up(xl){
+            flex-direction: row;
+        }
+    }
+    .progress-bar-wrapper{
+        display: flex;
+        flex-direction: column;
+        @include media-breakpoint-up(xxxl){
+            flex-direction: row;
+        }
+        .progress {
+            width: 275px;
+            @include media-breakpoint-up(sm){
+                width: 350px;
+            }
+            @include media-breakpoint-up(lg){
+                width: 450px;
+            }
+            @include media-breakpoint-up(xxl){
+                width: 650px;
+            }
+            @include media-breakpoint-up(xxxl){
+                width: 566px;
+            }
+            .progress-bar {
+                background-color: $secondary;
+            }
+        }
+    }
+}
+
+// student belt section
+
+.maz__belt-detail-box {
+    padding: 12px;
+    border: 1px solid $light;
+    border-radius: 1rem;
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 1.5rem;
+   
+ 
+    @include media-breakpoint-up(sm){
+        flex-direction: row;
+    }
+    img {
+        object-fit: contain;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+    .maz__belt-box-title {
+        font-family: $font-family-sub;
+        font-weight: 500;
+        color: $dark;
+        line-height: 24px;
+        font-size: 13px;
+        @include media-breakpoint-up(sm){
+            font-size: 22px;
+        }
+        @include media-breakpoint-up(md){
+            font-size: 20px;
+        }
+        @include media-breakpoint-up(xxl){
+            font-size: 21px;
+        }
+        .maz__belt-cat {
+            font-family: $font-family-sub;
+            font-weight: 400;
+            color: $text-light;
+            line-height: 28px;
+        }
+    }
+}
+
+.maz__belt-button-box {
+    border: 1px solid $light;
+    border-radius: 1rem;
+    height: 203px;
+    @include media-breakpoint-up(xl){
+        width: 312px;
+    }
+    .maz__belt-button-wrapper {
+        padding: 41px;
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        .btn-find-belt{
+            min-width: 230px;
+        }
+        .btn-portal{
+            min-width: 230px;
+        }
+    }
+}
+
+.maz__instruction-wrapper {
+    padding-top: 60px;
+    .maz__instructor-box {
+        border: 1px solid $light;
+        border-radius: 10px;
+        .maz___instructor-belt-wrapper {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            @include media-breakpoint-up(md){
+                flex-direction: row;
+            }
+            img {
+                border-radius: 10px;
+                object-fit: cover;
+                height: 100%;
+                max-width: 410px;
+                width: 100%;
+            }
+            .maz__instructor-belt-info {
+                font-family: $font-family-sub;
+                font-weight: 500;
+                color: $dark;
+                line-height: 21px;
+                .maz__instructor-belt-text {
+                    font-family: $font-family-sub;
+                    font-weight: 400;
+                    color: $text-light;
+                    line-height: 21px;
+                    font-size: 18px;
+                }
+            }
+        }
+    }
+}
+
+.maz__belt-user-box {
+    background: #fff;
+    margin-top: 30px;
+    border: 1px solid $light;
+    border-radius: 10px;
+    //max-width: 424px;
+    .maz__belt-user-wrapper {
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        img {
+            border-radius: 6px;
+            object-fit: cover;
+            height: 100%;
+        }
+        .maz__belt-user-title {
+            font-family: $font-family-sub;
+            font-weight: 400;
+            color: $dark;
+            line-height: 28px;
+        }
+    }
+}
+
+.maz__belt-video-box {
+    background: #fff;
+    margin-top: 30px;
+    border: 2px dashed $light;
+    border-radius: 10px;
+    height: 156px;
+    .maz__belt-video-wrapper {
+        padding-top: 41px;
+        display: flex;
+        justify-content: center;
+        img {
+            cursor: pointer;
+        }
+    }
+    .maz__belt-video-wrapper > input {
+        display: none;
+    }
+    .maz__belt-video-text {
+        font-family: $font-family-sub;
+        color: $text-light;
+        line-height: 23px;
+        padding-top: 1rem;
+        font-size: 18px;
+        @include media-breakpoint-up(md){
+            font-size: 20px;
+        }
+        @include media-breakpoint-up(md){
+            font-size: 18px;
+        }
+    }
+}
+
+.maz__belt-comment-box {
+    margin-top: 30px;
+}
+
+.maz__submit-button-wrapper {
+    margin-top: 30px;
+    .btn-submit-test {
+        box-shadow: 0px 10px 20px rgba(34, 180, 48, 0.15);
+        border-radius: 10px;
+        padding: 15px 0;
+        min-width: 150px;
+        @include media-breakpoint-up(lg){
+            min-width: 200px;
+            padding: 21px 0;
+        }
+    }
+}
+
+// student purchase history
+
+.maz__cmn-history-box {
+    border: 1px solid $light;
+    background: #ffffff;
+    border-radius: 10px;
+    .maz__cmn-history-wrapper {
+        padding: 17px;
+        @include media-breakpoint-up(sm){
+            display: flex;
+            flex-direction: row;
+        }
+        img {
+            border-radius: 10px;
+            object-fit: cover;
+            width: 100%;
+            height: 100%;
+            @include media-breakpoint-up(sm){
+              width: unset; 
+            }
+        }
+        .maz__cmn-history-title {
+            color: $dark;
+            line-height: 24px;
+            margin-top: 1rem;
+            @include media-breakpoint-up(md){
+                margin: 0;
+            }
+        }
+        .maz__cmn-history-btn{
+            display: flex;
+            flex-direction: column;
+            @include media-breakpoint-up(md){
+                flex-direction: row;
+            }
+        }
+    }
+}

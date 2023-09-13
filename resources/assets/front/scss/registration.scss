@@ -1,0 +1,363 @@
+//registration form
+.maz__register {
+    .maz__register-wrapper {
+        box-shadow: 0px 4px 50px rgba(43, 47, 55, 0.15);
+        border-radius: 18px;
+        max-width: 1096px;
+        margin: 0 auto;
+        .maz__form-wrapper {
+            //border-right: 1px solid #e5e9f1;
+            padding: 20px;
+            @include media-breakpoint-up(lg){
+                padding: 20px 67px 47px 65px;
+            }    
+            
+            .maz__register-title {
+                color: #000;
+                line-height: 29px;
+            }
+            .maz__register-text {
+                color: #707070;
+                line-height: 25px;
+                margin-bottom: 1.25rem;
+                //max-width: 415px;
+            }
+
+            .btn-facebook {
+                background-color: $dark-blue;
+            }
+            
+            .maz__register-form {
+                padding-top: 1.25rem;
+
+                .maz__cmn-form-lable {
+                    // color: $dark;
+                    // font-weight: 500;
+                    // line-height: 19px;
+                    // margin-bottom: 8px;
+                }
+                .form-control {
+                    // border-radius: 10px;
+                    // border: 1px solid #e5e9f1;
+                    // background-color: #fff;
+                    // max-width: 388px;
+                    // width: 100%;
+                    // padding: 11px 0 12px 14px;
+                }
+                .btn-register {
+                    background-color: $primary;
+                    border-radius: 24px;
+                    min-width: 150px;
+                    padding: 10px 0;
+                    color: #fff;
+                    font-size: 1rem;
+                    line-height: 19px;
+                }
+            }
+        }
+        .maz__login-banner {
+          @include media-breakpoint-up(lg){
+            border-radius: 0 18px 18px 0;
+            height: 100%;
+          }
+        }
+        
+    }
+
+    .maz__register-plan{
+        box-shadow: 0px 4px 50px rgba(43, 47, 55, 0.15);
+        border-radius: 18px;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+}
+
+/* Registration Process Step2  start */
+.maz_seprator{
+  text-align: center;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 10px;
+  .maz__signUp-text {
+    color: #707070;
+    line-height: 30px;
+    position: relative;
+    &::after, &::before{
+      content: '';
+      position: absolute;
+      max-width: 100px;
+      width: 100%;
+      height: 1px;
+      background-color: $border-color;
+      top:50%;
+    }
+    &::before{
+      left: - 118px;
+    }
+    &::after{
+      right: - 118px;
+    }
+  }
+}
+
+.maz__register-process-step2 {
+    .maz__register-process-wrapper {
+        background: #ffffff;
+        box-shadow: 0px 4px 50px rgba(43, 47, 55, 0.15);
+        border-radius: 16px;
+        margin: 0 auto;
+        max-width: 1245px;
+        padding: 0 20px 20px 20px;
+        @include media-breakpoint-up(lg){
+          padding: 0 64px 34px 64px;
+        }
+        .maz__register-process-title {
+            padding-top: 1rem;
+            line-height: 44px;
+        }
+        .maz__interest-wrapper {
+            // padding: 10px 0 0 63px;
+            .maz__interest-title {
+                line-height: 34px;
+                color: $text-dark;
+            }
+            .maz__interest-question {
+                line-height: 26px;
+                color: $text-dark;
+                font-family: $font-family-sub;
+            }
+            .cmn-btn-light {
+                color: $text-dark;
+                background-color: $light;
+                border-radius: 10px;
+                margin: 0 16px 16px 0;
+                &:hover {
+                    background-color: $dark;
+                    color: #fff;
+                }
+            }
+            .btn-check:checked + .cmn-btn-light,
+            .btn-check:active + .cmn-btn-light,
+            .cmn-btn-light:active,
+            .cmn-btn-light.dropdown-toggle.show {
+                background-color: $dark;
+                color: #fff;
+            }
+            .maz__interest-question-cat {
+                color: $text-light;
+                font-family: $font-family-sub;
+                font-size: 1rem;
+                line-height: 19px;
+            }
+            .maz__user-info {
+                color: $text-dark;
+                line-height: 28px;
+            }
+            .maz__user-cmn-box {
+                padding: 20px;
+                border-radius: 10px;
+                border: 1px solid #e5e9f1;
+                padding-bottom: 24px;
+            }
+
+            .maz__user-language {
+                color: $text-light;
+                font-family: $font-family-sub;
+                font-size: 1rem;
+                line-height: 19px;
+                padding-top: 32px;
+            }
+
+            .maz__instructor-box {
+                border: 1px solid #e5e9f1;
+                border-radius: 10px;
+                width: 481px;
+                height: 110px;
+            }
+
+            .maz__age-wrapper {
+                display: flex;
+                flex-wrap: wrap;
+                max-width: 560px;
+                width: 100%;
+            }
+        }
+        .maz__training-wrapper {
+          display: flex;
+          flex-wrap: wrap;
+          max-width: 612px;
+          .form-check {
+            width: 100%;
+            display: flex;
+            @include media-breakpoint-up(md){
+              width: 50%;
+            }
+          }
+       }
+    }
+}
+
+// login
+// .btn-login {
+//   line-height: 19px;
+//   padding: 14px;
+//   font-weight: 500;
+// }
+
+.maz__login-banner {
+  background: url("../images/login-banner.png") no-repeat center;
+  background-size: cover;
+  padding: 26px;
+  border-radius: 18px 18px 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  @include media-breakpoint-up(lg){
+    height: 100%;
+    border-radius: 18px 0 0 18px;
+  }
+  .maz__login-banner-title {
+    color: #fff;
+    line-height: 54px;
+    text-align: center;
+}
+.maz__login-banner-text {
+    padding-top: 12px;
+    color: #fff;
+    font-size: 1.125rem;
+    text-align: center;
+    @include media-breakpoint-up(lg) {
+        font-size: 1.25rem;
+    }
+}
+}
+
+.maz__login {
+    .maz__box-shadow {
+        box-shadow: 0px 4px 50px rgba(43, 47, 55, 0.15);
+        max-width: 1096px;
+        border-radius: 18px;
+        margin: 0 auto;
+
+        .maz__login-banner {
+            background: url("../images/login-banner.png") no-repeat center;
+            background-size: cover;
+            border-radius: 18px 18px 0 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            @include media-breakpoint-up(lg){
+              height: 100%;
+              border-radius: 18px 0 0 18px;
+            }
+            .maz__login-banner-title {
+              color: #fff;
+              line-height: 54px;
+              text-align: center;
+          }
+          .maz__login-banner-text {
+              padding-top: 12px;
+              color: #fff;
+              font-size: 1.125rem;
+              text-align: center;
+              @include media-breakpoint-up(lg) {
+                  font-size: 1.25rem;
+              }
+           }
+        }
+        
+        .maz__login-form-wrapper {
+            padding: 20px;
+            @include media-breakpoint-up(lg){
+              padding: 54px 84px;
+            }
+          
+            .maz__login-form-title {
+                padding-top: 20px;
+                color: #000;
+                line-height: 29px;
+            }
+            .maz__login-form-info {
+                font-size: 1rem;
+                font-weight: 400;
+                line-height: 30px;
+                color: #707070;
+                a:hover {
+                    color: #000;
+                }
+            }
+
+            .btn-login {
+                line-height: 19px;
+                padding: 14px;
+                font-weight: 500;
+              }
+            
+            .maz__reset-text {
+                color: $dark;
+                font-size: 1rem;
+                line-height: 19px;
+                padding-top: 1rem;
+                display: block;
+                text-align: center;
+                a {
+                    color: $dark;
+                    &:hover {
+                        color: $primary;
+                    }
+                }
+            }
+        }
+    }
+    .maz__register-box-shadow {
+        box-shadow: 0px 4px 50px rgba(43, 47, 55, 0.15);
+        border-radius: 18px;
+        // max-width: 1196px;
+        .maz__register-form-wrapper {
+            padding: 20px;
+            @include media-breakpoint-up(lg){
+            padding: 30px;
+            }
+            .btn-register {
+                color: #fff;
+                background-color: $primary;
+                min-width: 150px;
+                border-radius: 24px;
+                font-size: 1rem;
+                line-height: 19px;
+                padding: 14px 0;
+            }
+        }
+    }
+}
+
+.maz__bg-img-body{
+    background: url("../images/maz-registration-bg.jpg") repeat-y center;
+    background-size: 100% auto;
+    animation: bg_anim 20.9s linear infinite alternate;
+    .maz__register-plan{
+        background-color: #fff;
+    }
+}
+@keyframes bg_anim{
+
+    0% {
+        background-position: 0% 0%;
+    }
+    
+    25% {
+        background-position: 0%  25%;
+    }
+    50% {
+        background-position: 0%  50%;
+    }
+    75% {
+        background-position: 0%  75%;
+    }
+    100% {
+        background-position:  0% 100%;
+    }
+
+}

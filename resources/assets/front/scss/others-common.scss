@@ -1,0 +1,118 @@
+.grecaptcha-badge {
+    display: none;
+}
+label.error {
+    color: #dc3545;
+    font-size: 14px;
+}
+.maz__common_background_banner{
+    background-repeat: no-repeat;
+    background-size: cover;
+    padding: 3.5rem;
+    &.maz__instructor_detail_banner{
+        padding-bottom: 9rem;
+        @include media-breakpoint-up(lg){
+            padding-bottom: 10rem;
+        }
+        @include media-breakpoint-up(xl){
+            padding-bottom: 14.375rem;
+        }
+    } 
+    .maz__common-bg-content{
+        text-align: center;
+        h1{
+            color: #fff;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+    }
+    .breadcrumb{
+        margin-bottom: 0;
+        margin-top: 1rem;
+        .breadcrumb-item{
+            color: #fff;
+            font-weight: 300;
+            font-size:1.25rem;
+        }
+    }
+}
+.maz__terms__bg-gray{
+    background-color: #FBFBFB;
+    border-radius: $border-radius;
+    line-height: 30px;
+    .terms-list{
+        li{
+            margin-bottom: 0.5rem;
+        }
+    }
+    .style-number{
+        list-style-type: decimal;
+    }
+    .style-alphabet{
+        list-style-type:upper-alpha;
+    }
+}
+
+/* 404 page */
+
+.maz__error-page{
+    .maz__error-bg-image{
+        background: url("../images/404.jpg");
+        background-position: center;
+        background-size: cover;
+        background-repeat: no-repeat;
+        height: 100vh;
+        position: relative;
+        &::before{
+          content: '';
+          position: absolute;
+          background: linear-gradient(280.39deg, rgba(83, 10, 25, 0.76) 0%, rgba(4, 34, 85, 0.8) 71.08%);
+          width: 100%;
+          height: 100%;
+        }
+        .maz__error-content{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            height: 100%;
+            .maz__error-text{
+                font-family: $font-family-base;
+                font-size: 4rem;
+                color: #fff;
+                z-index: 2;
+                @include media-breakpoint-up(xxl){
+                    font-size: 11.25rem;
+                    line-height: 219px;
+                }
+            }
+            .maz__error-info{
+                font-family: $font-family-base;
+                line-height: 29px;
+                color: #fff;
+                z-index: 2;
+                text-align: center;
+            }
+            .maz__error-msg{
+                padding-top: 14px;
+                max-width: 653px;
+                width: 100%;
+                font-family: $font-family-sub;
+                line-height: 30px;
+                text-align: center;
+                color: #fff;
+                z-index: 2;
+                margin: 0 auto;
+            }
+            .btn-error-home{
+                margin-top: 42px;
+                min-width: 218px;
+                box-shadow: 0px 10px 30px rgba(50, 165, 248, 0.2);
+                border-radius: 40px;
+                padding: 15px;
+                z-index: 2;
+            }
+        }
+      
+    }
+}

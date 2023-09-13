@@ -1,0 +1,17 @@
+**/node_modules
+/storage/*.key
+/vendor
+.env
+.env.backup
+.phpunit.result.cache
+docker-compose.override.yml
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+/.idea
+/.vscode
+z_access_log
+z_error_log
+package-lock.json
+composer.lock

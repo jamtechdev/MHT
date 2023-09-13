@@ -1,0 +1,25 @@
+.maz__dashboard-header {
+    padding: 1.25rem 0;
+    background-color: #fff;
+    min-height: 600px;
+    height: 100%;
+    @include media-breakpoint-up(xl) {
+        border: 1px solid $border-color;
+    }
+    .list-group-item {
+        color: $text-light;
+        font-family: $font-family-base;
+        font-weight: 600;
+        font-size: 0.75rem;
+        @include media-breakpoint-up(sm){
+            font-size: 1rem;
+        }
+        &.active {
+            color: #fff;
+        }
+        .fas {
+            min-width: 30px;
+            text-align: center;
+        }
+    }
+}

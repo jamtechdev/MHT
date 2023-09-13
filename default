@@ -1,0 +1,66 @@
+
+server {
+    listen 80;
+    server_name 34.200.110.49;
+    return 403;
+}
+
+server {
+	if ($host = martialartszen.com) {
+                return 301 https://www.$host$request_uri;
+        } 
+
+	root /var/www/martialartszen/public;
+
+	index index.php index.html;
+
+	server_name martialartszen.com www.martialartszen.com;
+
+	location / {
+		try_files $uri $uri/ /index.php?$args;
+		#auth_basic "Restricted Content";
+		#auth_basic_user_file /var/www/martialartszen/public/.htpasswd;
+	}
+	
+	location ~ \.php$ {
+		include snippets/fastcgi-php.conf;
+		fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
+	}
+
+	location ~* ^\/(?!cache).*\.(?:js|css|jpg|jpeg|gif|png|ico|cur|gz|svg|svgz|mp4|ogg|ogv|webm|htc|webp|woff|woff2)$ {
+                expires max;
+                access_log off;
+                add_header Cache-Control "public, no-transform";
+        }
+
+    listen [::]:443 ssl ipv6only=on; # managed by Certbot
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/martialartszen.com/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/martialartszen.com/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+
+}
+
+server {
+    if ($host = www.martialartszen.com) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    if ($host = martialartszen.com) {
+        return 301 https://www.$host$request_uri;
+    } # managed by Certbot
+
+
+	listen 80 default_server;
+	listen [::]:80 default_server;
+
+	server_name martialartszen.com www.martialartszen.com;
+    return 404; # managed by Certbot
+
+
+
+
+}

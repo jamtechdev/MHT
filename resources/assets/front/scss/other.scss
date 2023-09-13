@@ -1,0 +1,190 @@
+// Fonts
+
+@import "@fortawesome/fontawesome-free/css/all.css";
+
+// Variables
+@import "variables";
+@import "mixins";
+// bootstrap
+@import "bootstrap";
+@import "~bootstrap/scss/breadcrumb";
+@import "~bootstrap/scss/accordion";
+@import "../../../../node_modules/swiper/swiper-bundle.min.css";
+//common
+@import "others-common";
+@import "common";
+@import "header";
+@import "footer";
+@import "form";
+@import "registration";
+@import "common_dashboard";
+@import "schools-and-instructors";
+@import "student-dashboard";
+@import "our-classes";
+@import "disciplines";
+@import "faq";
+@import "instructor-dashboard";
+// Toastr
+@import "~toastr/toastr";
+//swiper bundle
+
+.md-fade {
+    animation-name: fade;
+    animation-duration: 1s;
+    animation-fill-mode: forwards;
+}
+
+@keyframes fade {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/*Jquery Mark Calendar start*/
+// #myc__nav-container {
+//     margin-bottom: 15px;
+// }
+
+// #myc__current__month__year-container {
+//     display: inline-block;
+//     font-size: 1.5em;
+//     text-align: center;
+//     text-transform: capitalize;
+//     vertical-align: top;
+//     width: 68%;
+// }
+
+// #myc__prev__week-container {
+//     display: inline-block;
+//     width: 14%;
+//     @include media-breakpoint-up(md) {
+//         display: inline-block;
+//         width: 15%;
+//     }
+// }
+
+// #myc__next__week-container {
+//     display: inline-block;
+//     width: 15%;
+// }
+
+// #myc__prev-week {
+//     border: 1px solid #e0e0e0;
+//     border-radius: 80px;
+//     color: #e0e0e0;
+//     cursor: pointer;
+//     float: left;
+//     font-size: 1.5rem;
+//     height: 40px;
+//     text-align: center;
+//     width: 40px;
+// }
+
+// #myc__next-week {
+//     border: 1px solid #e0e0e0;
+//     border-radius: 80px;
+//     color: #e0e0e0;
+//     cursor: pointer;
+//     float: right;
+//     font-size: 1.5rem;
+//     height: 40px;
+//     text-align: center;
+//     width: 40px;
+// }
+
+// #myc__prev-week:hover,
+// #myc__next-week:hover {
+//     border: 1px solid #bdbdbd;
+//     color: #bdbdbd;
+// }
+
+// .myc__date-header {
+//     display: inline-block;
+//     min-height: 50px;
+//     padding: 15px 0px 15px 15px;
+//     vertical-align: top;
+//     width: 13.77%;
+// }
+
+// .myc__date-header:first-of-type {
+//     padding-left: 15px;
+// }
+
+// .myc__date-header:last-of-type {
+//     border-right: none;
+//     width: 13%;
+// }
+
+// .myc__available__time-scroll {
+//     display: block;
+//     overflow-y: auto;
+//     overflow-x: hidden;
+//     height: 400px;
+// }
+
+// .myc__day__time-container {
+//     display: inline-block;
+//     height: 100%;
+//     padding: 15px 15px 15px 15px;
+//     vertical-align: top;
+//     width: 13.77%;
+// }
+
+// .myc__day__time-container:first-of-type {
+//     padding-left: 1rem;
+// }
+
+// .myc__day__time-container:last-of-type {
+//     border-right: none;
+//     width: 13%;
+//     @include media-breakpoint-up(md) {
+//         width: 14%;
+//     }
+// }
+
+// .myc__date-number {
+//     font-size: 1rem;
+//     @include media-breakpoint-up(md) {
+//         font-size: 1.5rem;
+//     }
+// }
+
+// .myc__available-time {
+//     @include media-breakpoint-down(md) {
+//         border-radius: 100%;
+//         width: 2.5rem;
+//         border: 1px solid #707070;
+//         color: $primary;
+//         display: block;
+//         margin-bottom: 1rem;
+//         padding: 10px 0px 10px 0px;
+//         text-align: center;
+//         font-size: 0.75rem;
+//     }
+//     @include media-breakpoint-up(md) {
+//         border-radius: 10px;
+//         margin-bottom: 1rem;
+//         padding: 10px 0px 10px 4px;
+//         border: 1px solid #707070;
+//         color: $primary;
+//         display: block;
+//     }
+// }
+
+// .myc__available-time.selected,
+// .myc__available-time:hover {
+//     background-color: $primary;
+//     color: #fff;
+// }
+
+// .myc__date-header,
+// .myc__day__time-container {
+//     width: 12.5%;
+//     @include media-breakpoint-up(md) {
+//         width: 13.5%;
+//     }
+// }
+/*Jquery Mark Calendar end*/

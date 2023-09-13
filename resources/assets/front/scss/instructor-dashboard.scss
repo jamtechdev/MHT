@@ -1,0 +1,341 @@
+// instructor reviews
+.maz__profile-content {
+    padding: 1.5rem;
+}
+.maz__instructor-rating-box {
+    background-color: #fff;
+    border: 1px solid $light;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 1.5rem;
+    .star-review-rating {
+        width: 100%;
+        .fa-star {
+            color: $warning;
+            font-size: 1.75rem;
+        }
+        .maz__instructor-rating-title {
+            color: $dark;
+            font-family: $font-family-sub;
+            line-height: 21px;
+        }
+        .cmn-progress-bar {
+            flex: auto;
+            width: 231px;
+            height: 6px;
+            .progress-bar {
+                background-color: #0f8872;
+            }
+        }
+        .maz__cmn-rating-percentage {
+            color: $dark;
+            line-height: 19px;
+            font-family: $font-family-sub;
+            font-size: 1rem;
+        }
+    }
+}
+.maz__instructor-title-block {
+    padding: 0 0 20px 0;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid $border-color;
+}
+.maz__instructor-top-review {
+    display: flex;
+    padding: 26px 0;
+    border-bottom: 1px solid $border-color;
+    flex-direction: column;
+    border-bottom: 1px solid $border-color;
+    @include media-breakpoint-up(sm) {
+        align-items: center;
+        flex-direction: row;
+    }
+    &:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+    }
+    .maz__reve-fig {
+        border-radius: 50px;
+        width: 68px;
+        height: 68px;
+        margin: 0;
+        margin-bottom: 15px;
+        overflow: hidden;
+        @include media-breakpoint-up(sm) {
+            margin-bottom: 0;
+        }
+        img {
+            width: 100%;
+            height: auto;
+        }
+    }
+    .maz__reve-content {
+        @include media-breakpoint-up(sm) {
+            margin-left: 17px;
+        }
+        .instructor-rating {
+            color: $warning;
+            font-size: 0.75rem;
+        }
+        .maz__instructor-review-date {
+            color: $text-light;
+            font-family: $font-family-sub;
+            font-weight: 400;
+            font-size: 12px;
+            line-height: 14px;
+        }
+    }
+    .maz__top-review-wrapper {
+        display: flex;
+        align-items: center;
+    }
+}
+
+// instructor profile belt grade test
+
+.maz__instructor-grade-wrapper {
+    // padding: 25px;
+    .maz__belt-grade-info {
+        color: $text-light;
+        font-family: $font-family-sub;
+        font-weight: 400;
+        font-size: 1rem;
+        line-height: 19px;
+        margin-bottom: 1rem;
+    }
+    .maz__belt-grade-title {
+        padding-top: 30px;
+        color: $dark;
+        text-transform: uppercase;
+        line-height: 24px;
+    }
+}
+
+// instructor profile question & answers
+
+.maz__question-add-wrapper {
+    // padding: 24px;
+    .question-input {
+        background: #ffffff;
+        border: 1px solid #e5e9f1;
+
+        border-radius: 6px;
+    }
+    .col-form-label {
+        padding-top: 0;
+    }
+    .form-control {
+        max-width: unset;
+    }
+}
+
+// instructor profile course
+
+.maz__profile-course-title {
+    line-height: 29px;
+    color: $dark;
+    text-transform: uppercase;
+}
+
+.maz__instructor-swiper {
+    overflow: visible;
+    .maz__swiper__ins_btn-next,
+    .maz__swiper__ins_btn-prev {
+        top: -20px;
+        right: 12px;
+        &::after {
+            font-size: 0px;
+        }
+        img {
+            width: 50px;
+            height: 50px;
+        }
+    }
+    .maz__swiper__ins_btn-prev {
+        left: unset;
+        right: 75px;
+    }
+    .maz__profile-cmn-course-box {
+        background: #ffffff;
+        box-shadow: 0px 1px 15px rgba(50, 53, 61, 0.2);
+        border-radius: 6px;
+        margin-top: 24px;
+        margin-bottom: 24px;
+        position: relative;
+        img {
+            object-fit: cover;
+            width: 100%;
+        }
+        .maz__action-block{
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 0;
+            z-index: 3;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            align-items: center;
+            justify-content: center;
+            .maz__action-link{
+                padding: 5px;
+                width: 30px;
+                height: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color:$white;
+                &.maz__del-icon{
+                    background-color: rgba($primary, 0.8);
+                }
+                &.maz__edit-icon{
+                    background-color: rgba($dark, 0.8);
+                }
+            }
+        }
+        
+        &:hover{
+            .maz__action-block{
+                display: flex;
+            }
+        }
+        .maz__profile-cmn-course-detail {
+            padding: 20px;
+            .maz__profile-cmn-belt-title {
+                color: $dark;
+                font-family: $font-family-sub;
+                line-height: 30px;
+            }
+            .maz__profile-cmn-belt-level {
+                color: $text-light;
+                font-family: $font-family-sub;
+                line-height: 30px;
+                font-weight: 400;
+            }
+            .btn-course-detail {
+                min-width: 140px;
+                box-shadow: 0px 10px 20px rgba(34, 180, 48, 0.15);
+                border-radius: 10px;
+                padding: 8px 0;
+            }
+        }
+    }
+}
+
+// instructor profile announcement
+
+.maz__profile-announcement-wrapper {
+    display: flex;
+    flex-direction: column;
+    max-width: 900px;
+    width: 100%;
+    @include media-breakpoint-up(lg){
+        flex-direction: row;
+    }
+    .maz__profile-dropdown-btn {
+        display: flex;
+        flex-direction: column;
+        @include media-breakpoint-up(sm) {
+            flex-direction: row;
+            flex: auto;
+        }
+        .maz__announcement-dropdown { 
+            width: 100%; 
+            @include media-breakpoint-up(sm) {
+                max-width: 146px;
+            }
+        }
+        .btn-search {
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid $light;
+            border-radius: 6px;
+            padding: 13px;
+            display: flex;
+            justify-content: space-between;
+            @include media-breakpoint-up(sm) {
+                max-width: 391px;
+                margin-left: 10px;
+            }
+            @include media-breakpoint-up(xxl) {
+                margin-left: 24px;
+            }
+
+            .maz__btn-search-text {
+                color: $text-light;
+                font-family: $font-family-sub;
+                font-weight: 500;
+            }
+        }
+    }
+
+    .maz__announcement-cmn-icon-box {
+        height: 48px;
+        background: #f7f7f7;
+        border: 1px solid $light;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 14px;
+        margin-left: 10px;
+        @include media-breakpoint-up(xxl){
+            margin-left: 24px;
+        }
+    }
+
+    .maz__btn-announcement{
+        @include media-breakpoint-up(xxl){
+            margin-left: 24px;
+        }
+    }
+}
+
+.maz__profile-cmn-announcement-box {
+    background: #ffffff;
+    border: 1px solid $light;
+    border-radius: 6px;
+    padding: 15px 0;
+    margin-bottom: 14px;
+    .maz__announcement-content{
+        display: flex;
+        flex-direction: column;
+        @include media-breakpoint-up(sm){
+            flex-direction: row;
+        }
+    }
+    img {
+        object-fit: cover;
+        border-radius: 50px;
+        margin-left: 12px;
+    }
+    .maz__cmn-announce-title {
+        color: $dark;
+        font-family: $font-family-sub;
+        line-height: 23px;
+        font-size: 16px;
+        @include media-breakpoint-up(sm) {
+            font-size: 20px;
+            margin-left: 12px;
+        }
+    }
+    .maz__cmn-announce-post-title {
+        color: $dark;
+        font-family: $font-family-sub;
+        line-height: 14px;
+        font-size: 12px;
+        @include media-breakpoint-up(sm) {
+            margin-left: 12px;
+        }
+    }
+    .maz__cmn-announce-date-title {
+        color: $text-light;
+        font-family: $font-family-sub;
+        line-height: 14px;
+        font-size: 12px;
+    }
+}

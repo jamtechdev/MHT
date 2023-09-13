@@ -1,0 +1,117 @@
+$grid-breakpoints: (
+    xs: 0,
+    sm: 576px,
+    md: 768px,
+    lg: 992px,
+    xl: 1200px,
+    xxl: 1400px,
+    xxxl: 1600px
+  );
+  
+
+//font family
+
+$font-family-base: "Montserrat";
+
+$font-family-sub: "Roboto";
+
+$min-contrast-ratio: 2.5 !default;
+
+$headings-font-weight: 700;
+$border-color: #d9d9d9;
+//color
+$red: #ff1648 !default;
+$blue: #32a5f8 !default;
+$dark: #34353f !default;
+$dark-blue: #2157d5 !default;
+
+
+$headings-font-family: $font-family-base !default;
+$headings-color: $dark;
+
+$primary: $red;
+$info: $blue;
+$secondary: $dark-blue;
+$success: #22b431;
+$warning: #ffb254;
+
+$text-dark: $dark;
+$text-light: #707070;
+
+$light: #e5e9f1;
+
+$border-radius : 10px;
+
+//nav-link
+
+$link-decoration: none;
+$navbar-light-active-color: $primary;
+
+//nav-link
+$navbar-toggler-padding-x:          .5rem !default;
+$navbar-toggler-border-radius:      4px !default;
+$navbar-toggler-focus-width:        0 !default;
+$nav-link-font-weight: 400;
+$navbar-nav-link-padding-x: 2rem;
+$navbar-brand-padding-y: 0;
+$navbar-light-color: $text-dark;
+$navbar-light-hover-color: $primary;
+$navbar-light-active-color: $primary;
+
+//input
+
+$input-border-color: #e5e9f1;
+$input-focus-width: 0; 
+$input-focus-box-shadow:                none;
+$input-padding-y: 0.65rem !default;
+$input-color:                           $text-light;
+$input-font-weight:                    400;
+$form-label-font-weight:                500;
+$form-label-color:                      $text-dark;
+$form-check-input-focus-box-shadow:      none;
+$form-check-input-focus-border:           none;
+$progress-height: 8px;
+
+// list group
+$list-group-active-bg: $secondary;
+$list-group-border-radius: 6px;
+$list-group-item-padding-y: 0.875rem;
+$list-group-item-padding-x: 1rem;
+$list-group-border-color: transparent;
+
+// card
+$card-border-radius: 6px;
+$card-border-color: $border-color;
+
+
+
+$table-cell-padding-y: 0.5rem;
+$table-cell-padding-x: 0.75rem;
+
+$modal-content-border-radius:       10px !default;
+$breadcrumb-active-color:           #fff !default;
+
+$pagination-active-color:           #fff;
+$pagination-active-bg:              $info;
+$pagination-active-border-color:    $info;
+$pagination-border-color:           $border-color;
+$pagination-color:                  $text-light;
+$pagination-focus-box-shadow:       none;
+$pagination-hover-color:            $info; 
+$pagination-focus-color:            $info;
+
+//Accordian
+$accordion-padding-x: 0;
+$accordion-color: $dark;
+$accordion-button-active-bg: #fff;
+$accordion-button-active-color: $dark;
+$accordion-icon-color: $accordion-color;
+
+$accordion-button-icon:         url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10' fill='none' ><path fill='#{$text-light}' d='M10 5.01142C10 5.50948 9.59624 5.91324 9.09817 5.91324H5.9375V9.0625C5.9375 9.58027 5.51777 10 5 10C4.48223 10 4.0625 9.58027 4.0625 9.0625V5.91324H0.901827C0.403762 5.91324 0 5.50948 0 5.01142C0 4.51335 0.403762 4.10959 0.901827 4.10959H4.0625V0.9375C4.0625 0.419733 4.48223 0 5 0C5.51777 0 5.9375 0.419733 5.9375 0.9375V4.10959H9.09817C9.59624 4.10959 10 4.51335 10 5.01142Z' /></svg>");
+$accordion-button-active-icon:  url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10' fill='none' ><rect fill='#{$accordion-button-active-color}' y='4' width='10' height='2' rx='1' /></svg>");
+
+$alert-border-radius:           0 !default;
+
+// offcanvas
+
+$offcanvas-horizontal-width:        320px !default;
