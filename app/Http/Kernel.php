@@ -65,5 +65,6 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'check.step.complete' => \App\Http\Middleware\CheckStepComplete::class,
         'check.login.paid' => \App\Http\Middleware\RedirectIfLoginAndPaid::class,
+        'password' => \App\Http\Middleware\PasswordProtectionMiddleware::class,
     ];
 }

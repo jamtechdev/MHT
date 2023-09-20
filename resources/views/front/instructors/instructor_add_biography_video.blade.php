@@ -44,7 +44,8 @@
                                         </div>
                                         <div class="mb-3">
                                             <label for="biography_video_path" class="col-form-label text-md-end">{{ __('Upload Lesson Video') }} <span class="text-primary">*</span></label>
-                                            <div id="wistia_uploader" style="height:360px;width:640px;"></div>
+                                            {{-- <div id="wistia_uploader" style="height:360px;width:640px;"></div> --}}
+                                            <input type="url" class="form-control" name="video_name" id="video_upload">
                                         </div>
                                         <div class="d-inline">
                                             <button type="submit" class="btn btn-secondary dashboard_btn_lg text-uppercase me-3">Save Biography Video</button>
