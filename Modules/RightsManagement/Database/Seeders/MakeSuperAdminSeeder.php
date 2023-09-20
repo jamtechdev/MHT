@@ -39,7 +39,7 @@ class MakeSuperAdminSeeder extends Seeder
             $userInput = [
                 'name' => 'Super Admin',
                 'email' => 'admin@admin.com',
-                'password' => Hash::make('12345678')
+                'password' => Hash::make('123456')
             ];
             $user = Admin::create($userInput);
             $user->assignRole($roleInput['name']);

@@ -32,7 +32,6 @@ Route::middleware(['auth:instructor'])->group(function () {
     Route::get('instructor_settings', [InstructorController::class, 'getInstructorSettings'])->name('instructor_settings');
     Route::get('instructor_biography', [InstructorController::class, 'getInstructorBiographyVideo'])->name('instructor_biography');
     Route::get('instructor_add_biography', [InstructorController::class, 'getInstructorAddBiographyVideo'])->name('instructor_add_biography');
-    Route::get('instructor-play-video/{id}', [InstructorController::class, 'instructorPlayVideo'])->name('instructorPlayVideo');
     Route::post('instructor_post_biography', [InstructorController::class, 'getInstructorPostBiographyVideo'])->name('instructor_post_biography');
     Route::get('delete_instructor_biography/{biographyId}', [InstructorController::class, 'deleteInstructorBiography'])->name('delete_instructor_biography');
     Route::post('biographystatus/{class}', [InstructorController::class, 'biographyStatusUpdate'])->name('biographystatus');

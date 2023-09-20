@@ -18,8 +18,6 @@ class CreateDisciplinesTable extends Migration
             $table->string('title', 100)->nullable();
             $table->string('description')->nullable();
             $table->string('photo')->nullable();
-            $table->integer('desktop_sequence')->default(0);
-            $table->integer('mobile_sequence')->default(0);
             $table->softDeletes();
             $table->timestamps();
         });

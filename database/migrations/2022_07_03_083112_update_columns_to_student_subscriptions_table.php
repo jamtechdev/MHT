@@ -18,7 +18,7 @@ class UpdateColumnsToStudentSubscriptionsTable extends Migration
             $table->unsignedBigInteger('subscription_id')->nullable()->change();
             $table->foreign('student_id')->references('id')->on('users')->nullOnDelete();
             $table->foreign('subscription_id')->references('id')->on('subscription_plans')->nullOnDelete();
-            // $table->softDeletes();
+            $table->softDeletes();
         });
     }
 
