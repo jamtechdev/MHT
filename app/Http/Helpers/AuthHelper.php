@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\StudentSubscription;
 use App\Models\PaymentDetails;
 use App\Models\SendgridTemplate;
+use Illuminate\Database\Eloquent\Collection;
 
 function authStripe($user)
 {
@@ -172,7 +173,14 @@ function stripeSubscription($user, $request, $couponId, $priceId)
             $customer = \Stripe\Customer::create(array(
                 'name' => $user->name,
                 'email' => $user->email,
-                'source'  => $request->stripeToken
+                'source'  => $request->stripeToken,
+                // 'address' => [
+                //     'line1' => '510 Townsend St',
+                //     'postal_code' => '98140',
+                //     'city' => 'San Francisco',
+                //     'state' => 'CA',
+                //     'country' => 'US',
+                // ],
             ));
         }
     } 
@@ -182,9 +190,18 @@ function stripeSubscription($user, $request, $couponId, $priceId)
         $customer = \Stripe\Customer::create(array(
             'name' => $user->name,
             'email' => $user->email,
-            'source'  => $request->stripeToken
+            'source'  => $request->stripeToken,
+            // 'address' => [
+            //     'line1' => '510 Townsend St',
+            //     'postal_code' => '98140',
+            //     'city' => 'San Francisco',
+            //     'state' => 'CA',
+            //     'country' => 'US',
+            // ],
         ));
     }
+
+    // dd($customer->toArray());
    
     if($customer) 
     {
@@ -215,43 +232,92 @@ function stripeSubscription($user, $request, $couponId, $priceId)
         //     ));
         // }
         
-        if($couponId) {
-            $subscription = \Stripe\Subscription::create([
-                "customer" => $customer->id,
-            // 'collection_method'=>'send_invoice',
-            // 'days_until_due'=>'0',
-                //'receipt_email'=>'bkalyani1998@gmail.com',
-                "items" => array(
-                    array(
-                        "price" => $priceId->plan_id,
-                    ),
-                ),
-            "expand" => ["latest_invoice.payment_intent"],
-            "coupon" => $couponId,
-            ]);
-        }
-        else
-        {
-            $subscription = \Stripe\Subscription::create([
-                "customer" => $customer->id,
-            // 'collection_method'=>'send_invoice',
-            // 'days_until_due'=>'0',
-                //'receipt_email'=>'bkalyani1998@gmail.com',
-                "items" => array(
-                    array(
-                        "price" => $priceId->plan_id,
-                    ),
-                ),
-            "expand" => ["latest_invoice.payment_intent"]
-            ]);
-        }    
+        // $price = \Stripe\Price::create([
+        //     'unit_amount' => round($priceId->price),
+        //     'currency' => 'inr',
+        //     'recurring' => ['interval' => 'month'],
+        //     'product_data' => [
+        //         'name' => $priceId->plan_name
+        //     ],
+        // ]);
 
+        // dd($price->toArray());
+        
+        // if($price){
+            // if($couponId) {
+            //     $subscription = \Stripe\Subscription::create([
+            //         "customer" => $customer->id,
+            //     // 'collection_method'=>'send_invoice',
+            //     // 'days_until_due'=>'0',
+            //         //'receipt_email'=>'bkalyani1998@gmail.com',
+            //         "items" => array(
+            //             array(
+            //                 // "price" => $priceId->plan_id,
+            //                 "price" => $price->id,
+            //             ),
+            //         ),
+            //     "expand" => ["latest_invoice.payment_intent"],
+            //     "coupon" => $couponId,
+            //     ]);
+            // }
+            // else
+            // {
+            //     $subscription = \Stripe\Subscription::create([
+            //         "customer" => $customer->id,
+            //     // 'collection_method'=>'send_invoice',
+            //     // 'days_until_due'=>'0',
+            //         //'receipt_email'=>'bkalyani1998@gmail.com',
+            //         "items" => array(
+            //             array(
+            //                 // "price" => $priceId->plan_id,
+            //                 "price" => $price->id,
+            //             ),
+            //         ),
+            //     "expand" => ["latest_invoice.payment_intent"]
+            //     ]);
+            // }
 
+            if($couponId) {
+                $subscription = \Stripe\Subscription::create([
+                    "customer" => $customer->id,
+                // 'collection_method'=>'send_invoice',
+                // 'days_until_due'=>'0',
+                    //'receipt_email'=>'bkalyani1998@gmail.com',
+                    "items" => array(
+                        array(
+                            "price" => $priceId->plan_id,
+                        ),
+                    ),
+                "expand" => ["latest_invoice.payment_intent"],
+                "coupon" => $couponId,
+                ]);
+            }
+            else
+            {
+                $subscription = \Stripe\Subscription::create([
+                    "customer" => $customer->id,
+                // 'collection_method'=>'send_invoice',
+                // 'days_until_due'=>'0',
+                    //'receipt_email'=>'bkalyani1998@gmail.com',
+                    "items" => array(
+                        array(
+                            "price" => $priceId->plan_id,
+                        ),
+                    ),
+                "expand" => ["latest_invoice.payment_intent"]
+                ]);
+            } 
+        // }    
+
+        // dd($subscription, $customer,$request->all(), $user->toArray(), $couponId, $priceId->toArray(),config("services.stripe.secret"));
 
             if($subscription) {
 
                  // Retrieve Subscription Data
                  $subsData = $subscription->jsonSerialize();
+
+
+                 dd($subsData);
 
                 // echo "<pre>";
                 // print_r($subsData['latest_invoice']['invoice_pdf']);die;
@@ -262,6 +328,7 @@ function stripeSubscription($user, $request, $couponId, $priceId)
                     $user->plan_id = $priceId->plan_id;
                     $user->plan_subscription_id = $subsData['id'];
                     $user->is_subscribe = $request->is_subscribe;
+                    $user->subscription_id = $priceId->id;
                     $user->plan_amount = $request->price;
                     // $user->payment_status = 1;
                     $user->plan_amount_currency = $request->currency;
@@ -269,7 +336,7 @@ function stripeSubscription($user, $request, $couponId, $priceId)
                     $user->status = $subsData['status'];
                     $user->save();
 
-                    if($subscription->latest_invoice->payment_intent->charges->data)
+                    if(isset($subscription->latest_invoice->payment_intent->charges->data) and !empty($subscription->latest_invoice->payment_intent->charges->data))
                     {
                         // save subscription details
                         $student = new StudentSubscription;
@@ -320,33 +387,33 @@ function stripeSubscription($user, $request, $couponId, $priceId)
                     $user->payment_failed_reminder = "0";
                     $user->save();
 
-                    $template = SendgridTemplate::where('id',28)->first();
+                    // $template = SendgridTemplate::where('id',28)->first();
 
-                    $template_id = "d-".$template->template_id;   
+                    // $template_id = "d-".$template->template_id;   
 
-                    $email = new \SendGrid\Mail\Mail();
+                    // $email = new \SendGrid\Mail\Mail();
     
-                    $email->setFrom("admin@free.martialartszen.com","MartialArtsZen");
-                    $email->setSubject('Try MartialArtsZen.com using this referral');
-                    $email->addTo($user->email);
-                    $email->addContent("text/html","Join me and improve your skills in various disciplines");
-                    $email->addDynamicTemplateDatas([
-                        "first_name"=>$user->firstname,
-                        "default"=>"Valued customer",
-                        "actionUrl"=>route('bronzePlanStripe2')
-                        ]);
-                    $email->setTemplateId($template_id);
+                    // $email->setFrom("admin@free.martialartszen.com","MartialArtsZen");
+                    // $email->setSubject('Try MartialArtsZen.com using this referral');
+                    // $email->addTo($user->email);
+                    // $email->addContent("text/html","Join me and improve your skills in various disciplines");
+                    // $email->addDynamicTemplateDatas([
+                    //     "first_name"=>$user->firstname,
+                    //     "default"=>"Valued customer",
+                    //     "actionUrl"=>route('bronzePlanStripe2')
+                    //     ]);
+                    // $email->setTemplateId($template_id);
                     
-                    $sendgrid = new \SendGrid(env('MAIL_PASSWORD'));
+                    // $sendgrid = new \SendGrid(env('MAIL_PASSWORD'));
         
-                    try{
-                        $response = $sendgrid->send($email);
-                        print $response->statusCode(). "\n";
-                    }
-                    catch(Exception $e)
-                    {
-                        echo "Caught Exception:".$e->getMessage()."\n";
-                    } 
+                    // try{
+                    //     $response = $sendgrid->send($email);
+                    //     print $response->statusCode(). "\n";
+                    // }
+                    // catch(Exception $e)
+                    // {
+                    //     echo "Caught Exception:".$e->getMessage()."\n";
+                    // } 
 
                     // Check The Subscription Activation Is In Complete
                     if($subsData['status'] == 'incomplete') {
@@ -473,4 +540,41 @@ function stripeBronzeSubscription($user, $request, $couponId) {
 
     return 'success';
     // }
+}
+
+// create folder on dacast
+if(function_exists('createFolderOnDacast')){
+    function createFolderOnDacast(){
+        $curl = curl_init();
+    
+        curl_setopt_array($curl, [
+            CURLOPT_URL => "https://developer.dacast.com/v2/folder",
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => "",
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => "POST",
+            CURLOPT_POSTFIELDS => json_encode([
+                'full_path' => '/'
+            ]),
+            CURLOPT_HTTPHEADER => [
+                "X-Api-Key: 1697816583cjfcrU0IYI1Nk7aWxoF9kr7HgAb5Laju",
+                "X-Format: default",
+                "accept: application/json",
+                "content-type: application/json"
+            ],
+        ]);
+    
+        $response = curl_exec($curl);
+        $err = curl_error($curl);
+    
+        curl_close($curl);
+    
+        if ($err) {
+            dd($err);
+        } else {
+            dd($response);
+        }
+    }
 }

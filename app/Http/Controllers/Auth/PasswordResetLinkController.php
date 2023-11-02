@@ -12,6 +12,8 @@ use Illuminate\Support\Str;
 use App\Models\User;
 use App\Models\PasswordReset;
 use App\Models\SendgridTemplate;
+use App\Mail\ForgotPasswordMail;
+use Illuminate\Support\Facades\Mail;
 
 class PasswordResetLinkController extends Controller
 {
@@ -38,40 +40,61 @@ class PasswordResetLinkController extends Controller
     public function store(Request $request)
     {
         $token = Str::random(40);
+        $data = [];
 
         $request->validate([
             'email' => ['required', 'email'],
         ]);
 
         $user = User::where('email',$request->email)->first();
+        // dd($user);
         
         if($user)
         {
-            $template = SendgridTemplate::where('id',17)->first();
+            // // $template = SendgridTemplate::where('id',17)->first();
+            // $template = SendgridTemplate::where('id',20)->first();
+            // // dd($template);
 
-            $template_id = "d-".$template->template_id;   
+            // $email = new \SendGrid\Mail\Mail();
+            // // dd($email);
 
-            $email = new \SendGrid\Mail\Mail();
-    
-            $email->setFrom("admin@free.martialartszen.com","MartialArtsZen");
-            $email->setSubject('Try MartialArtsZen.com using this referral');
-            $email->addTo($request->email);
-            $email->addContent("text/html","Join me and improve your skills in various disciplines");
-            $email->addDynamicTemplateDatas([
-                "first_name"=>$user->firstname,
-                "email"=>$request->email,
-                "token"=>$token,
-                "default"=>"Valued customer",
-                "reserPassword"=>route('password.reset',['token' => $token ,'email'=>$request->email])
-                ]);
-            $email->setTemplateId($template_id);
+            // $email->setFrom("admin@free.martialartszen.com","MartialArtsZen");
+            // $email->setSubject('Try MartialArtsZen.com using this referral');
+            // $email->addTo($request->email);
+            // $email->addContent("text/html","Join me and improve your skills in various disciplines");
+            // $email->addDynamicTemplateDatas([
+            //     "first_name"=>$user->firstname,
+            //     "email"=>$request->email,
+            //     "token"=>$token,
+            //     "default"=>"Valued customer",
+            //     "reserPassword"=>route('password.reset',['token' => $token ,'email'=>$request->email])
+            //     ]);
+
+            // if($template){
+            //     $email->setTemplateId($template->template_id);
+            // }
             
-            $sendgrid = new \SendGrid(env('MAIL_PASSWORD'));
-    
+            // $sendgrid = new \SendGrid(env('MAIL_PASSWORD'));
+            
             try{
-                $response = $sendgrid->send($email);
+                // $response = $sendgrid->send($email);
+                // dd($response);
 
+                // $body = json_decode($response->body(), true);
+                // dd($body['errors'][0]['message']);
+
+                // if(isset($body['errors'][0]['message'])){
+                //     return Redirect::back()->with('error', $body['errors'][0]['message']);
+                // }
+                $data = [
+                    'token' => $token ,
+                    'email'=>$request->email
+                ];
+                // dd($data);
+                Mail::to($request->email)->send(new ForgotPasswordMail($data));
+                // dd($data);
                 $check_user = PasswordReset::where('email',$request->email)->first();
+                // dd($check_user);
 
                 if($check_user)
                 {
@@ -87,9 +110,9 @@ class PasswordResetLinkController extends Controller
                 //print $response->statusCode(). "\n";
                 return Redirect::back()->with('success', 'Pasword Reset Link Sent Successfully !');
             }
-            catch(Exception $e)
+            catch(\Exception $e)
             {
-                echo "Caught Exception:".$e->getMessage()."\n";
+                return redirect()->back()->with('error',$e->getMessage());
             }
         }
         else

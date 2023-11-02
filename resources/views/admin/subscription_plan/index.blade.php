@@ -137,7 +137,7 @@
                         
                         var element =  '<div class="btn-group">';
                         element +=  "<a class='btn btn-warning btn-xs me-1' title='Edit' href='subscriptionplan/" + o.id + "/edit'><i class='fa fa-edit'></i></a>";
-                        // element +=  '<button class="btn btn-danger btn-xs" title="Delete" onclick="deletesubscriptionplan(' + o.id + ')" data-bs-toggle="modal" data-bs-target="#exampleModal"><i class="fa fa-trash"></i></button>';
+                        element +=  '<button class="btn btn-danger btn-xs" title="Delete" onclick="deletesubscriptionplan(' + o.id + ')" data-bs-toggle="modal" data-bs-target="#exampleModal"><i class="fa fa-trash"></i></button>';
                         element +=  '</div>';
                         return element;
                         

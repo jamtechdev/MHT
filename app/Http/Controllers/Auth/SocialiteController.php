@@ -27,7 +27,8 @@ class SocialiteController extends Controller
     public function redirectToGoogle(Request $request)
     {
         if($request->userRole != '') {
-           
+            
+            // dd($request->all());
 
             Session::forget('googleUserRole');
             Session::put('googleUserRole', $request->userRole);
@@ -297,6 +298,7 @@ class SocialiteController extends Controller
 
         $facebookUser = Socialite::driver('facebook')->stateless()->user();
 
+        // dd(Session::get('facebookUserRole'),$facebookUser->getEmail(),$facebookUser,$request->all());
         if($facebookUser->getEmail()) {
             // Student Login With Facebook
             $facebookUserRole = Session::get('facebookUserRole');
@@ -341,26 +343,26 @@ class SocialiteController extends Controller
 
                                 // send email to referral for someone is accepting his referral 
 
-                                $template = SendgridTemplate::where('id',16)->first();
+                                // $template = SendgridTemplate::where('id',16)->first();
 
-                                $template_id = "d-".$template->template_id;   
+                                // $template_id = "d-".$template->template_id;   
 
-                                $email = new \SendGrid\Mail\Mail();
+                                // $email = new \SendGrid\Mail\Mail();
                             
-                                $email->setFrom("admin@free.martialartszen.com","MartialArtsZen");
-                                $email->setSubject('Try MartialArtsZen.com using this referral');
-                                $email->addTo($referral_user->email);
-                                $email->addContent("text/html","Join me and improve your skills in various disciplines");
-                                $email->addDynamicTemplateDatas([
-                                    "first_name"=>$referral_user->firstname,
-                                    "default"=>"Valued customer",
-                                    "redeemReferral"=>route('student_profile',['id'=>$referral_user->id])
-                                    ]);
-                                $email->setTemplateId($template_id);
+                                // $email->setFrom("admin@free.martialartszen.com","MartialArtsZen");
+                                // $email->setSubject('Try MartialArtsZen.com using this referral');
+                                // $email->addTo($referral_user->email);
+                                // $email->addContent("text/html","Join me and improve your skills in various disciplines");
+                                // $email->addDynamicTemplateDatas([
+                                //     "first_name"=>$referral_user->firstname,
+                                //     "default"=>"Valued customer",
+                                //     "redeemReferral"=>route('student_profile',['id'=>$referral_user->id])
+                                //     ]);
+                                // $email->setTemplateId($template_id);
                                 
-                                $sendgrid = new \SendGrid(env('MAIL_PASSWORD'));
+                                // $sendgrid = new \SendGrid(env('MAIL_PASSWORD'));
                                 
-                                $sendgrid->send($email);
+                                // $sendgrid->send($email);
                             }
 
                             $updateFreePlanData = [

@@ -17,6 +17,7 @@ class CreateInstructorsTable extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            $table->integer('display_order')->default(0);
             $table->string('password')->nullable();
             $table->string('phone', 15)->nullable();
             $table->string('address')->nullable();

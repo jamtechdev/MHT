@@ -45,7 +45,7 @@
                                         <div class="mb-3">
                                             <label for="biography_video_path" class="col-form-label text-md-end">{{ __('Upload Lesson Video') }} <span class="text-primary">*</span></label>
                                             {{-- <div id="wistia_uploader" style="height:360px;width:640px;"></div> --}}
-                                            <input type="url" class="form-control" name="video_name" id="video_upload">
+                                            <input type="file" accept="video/mp4" name="bio_video_file" class="form-control">
                                         </div>
                                         <div class="d-inline">
                                             <button type="submit" class="btn btn-secondary dashboard_btn_lg text-uppercase me-3">Save Biography Video</button>
@@ -53,6 +53,13 @@
                                         </div>
                                     </div>
                                 </form>
+                                <div id="upload-status"></div>
+
+                                {{-- <form id="videoUploadForm">
+                                    <input type="file" id="videoFile" class="form-control" accept=".mp4,.avi,.mov">
+                                    <button type="submit" class="btn btn-primary my-2">Upload Video</button>
+                                </form> --}}
+
                             </div>
                         </div>
                     </div>
@@ -75,6 +82,9 @@
                 description: {
                     required: true,
                     maxlength: 500
+                },
+                bio_video_file: {
+                    required: true,
                 }
             },
             messages: {
@@ -89,27 +99,111 @@
             }
         });
 
-        // Wistia Code Section
-        window._wapiq = window._wapiq || [];
-        _wapiq.push(function(W) {
-            window.wistiaUploader = new W.Uploader({
-                accessToken: "{{config("services.wistia.token")}}",
-                dropIn: "wistia_uploader",
-                projectId: '{{$projectId}}',
-                beforeUpload: function() {
-                    wistiaUploader.setFileName($("#title").val());
-                    wistiaUploader.setFileDescription($("#description").val());
-                }
-            });
-            wistiaUploader.bind('uploadsuccess', function(file, media) {
-                if(media) {
-                    $("#video_id").val(media.id);
-                    $("#video_name").val(media.name);
-                    $("#video_duration").val(media.duration);
-                    $("#video_thumbnail").val(media.thumbnail.url);
+        $('#addBiographyVideoForm').submit(function(e) {
+            e.preventDefault();
+
+            var formData = new FormData($(this)[0]);
+
+            $.ajax({
+                url: $(this).attr('action'),
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                beforeSend: function(){
+                    $('div.main-loader-please-wait').show();
+                },
+                complete: function(){
+                    $('div.main-loader-please-wait').hide();
+                },
+                success: function(response) {
+                    $('div.main-loader-please-wait').hide();
+                    if(response.status == 'success'){
+                        // $('div.main-loader-please-wait').hide();
+                        toastr.success(response.message,response.status);
+                        $('#upload-status').html('<div class="alert alert-success">'+ response.message +'</div>');
+                        $('#upload-status').html(`<div class="alert alert-dismissible alert-success fade my-2 rounded show" role="alert"><strong>Success! </strong> `+ response.message +`<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`);
+                        $("form#addBiographyVideoForm")[0].reset();
+                        setTimeout(function(){
+                            window.location.href = "{{ route('instructor_biography') }}";
+                        },2000)
+                    }
+                    else{
+                        toastr.error(response.message,response.status);
+                        $('#upload-status').html('<div class="alert alert-error">'+ response.message +'</div>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    // Handle errors
+                    $('#upload-status').html('Error: ' + xhr.responseText);
                 }
             });
         });
+
+
+        // $("#videoUploadForm").submit(function(e) {
+        //     e.preventDefault();
+
+        //     var videoFile = $("#videoFile")[0].files[0];
+        //     var formData = new FormData();
+        //     formData.append("video", videoFile);
+            // console.log(videoFile);
+            // console.log(formData);
+            // return false;
+
+            // $.ajax({
+            //     url: "https://api.dacast.com/v2/upload",
+            //     type: "POST",
+            //     data: formData,
+            //     processData: false,
+            //     contentType: false,
+            //     headers: {
+            //         "Access-Control-Allow-Origin": '{{ url('') }}',
+            //         "Access-Control-Allow-Methods": 'GET, POST, PUT, DELETE',
+            //         "Authorization": "Bearer YOUR_API_ACCESS_TOKEN"
+            //     },
+            //     crossDomain: true,  // Enable cross-domain requests
+            //     xhrFields: {
+            //         withCredentials: true  // Send credentials if needed
+            //     },
+            //     success: function(response) {
+            //         // Handle the success response from Dacast
+            //         console.log("Video uploaded successfully:", response);
+            //     },
+            //     error: function(error) {
+            //         // Handle any errors
+            //         console.error("Error uploading video:", error);
+            //     }
+            // });
+
+            // const settings = {
+            //     async: true,
+            //     crossDomain: true,
+            //     url: 'https://developer.dacast.com/v2/vod',
+            //     method: 'POST',
+            //     headers: {
+            //         accept: 'application/json',
+            //         'X-Format': 'default',
+            //         'content-type': 'application/json',
+            //         'X-Api-Key': 'api_key'
+            //     }
+            // };
+
+            // $.ajax(settings).done(function (response) {
+            // console.log(response);
+            // });
+            // console.log(formData.video);
+        // });
+
+        // try {
+        //     fetch('https://api.first.org/data/v1/countries').then(function(response){
+        //         return response.json()
+        //     }).then(function(data){
+        //         console.log(data);
+        //     });
+        // } catch (error) {
+        //     console.log(error);
+        // }
     });
 </script>
 @endpush

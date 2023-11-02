@@ -36,10 +36,34 @@
             @endcan
 
             @can('instructor')
-            <li class="{{ isActiveRoute(['admin::instructor.index', 'admin::instructor.info']) }}">
+            {{-- <li class="{{ isActiveRoute(['admin::instructor.index', 'admin::instructor.info']) }}">
                 <a href="{{ url(config('settings.ADMIN_PREFIX').'instructor') }}">
                     <i class="fa fa-user-secret"></i>
                     <span class="nav-label">Instructors</span></a>
+            </li> --}}
+            
+            <li class="{{ isActiveRoute(['admin::instructor.index', 'admin::instructor.info', 'admin::admin.instructor.displayorder']) }}">
+                <a href="javascript:;">
+                    <i class="fa fa-cog"></i>
+                    <span class="nav-label">Instructor</span>
+                    <span class="fa arrow"></span>
+                </a>
+                <ul class="nav nav-second-level">
+
+                    <li class="{{ isActiveRoute(['admin::instructor.index', 'admin::instructor.info']) }}">
+                        <a href="{{ url(config('settings.ADMIN_PREFIX').'instructor') }}">
+                            <i class="fa fa-user-secret"></i>
+                            <span class="nav-label">Instructors</span></a>
+                    </li>
+
+                    <li class="{{ isActiveRoute(['admin::admin.instructor.displayorder']) }}">
+                        <a href="{{ url(config('settings.ADMIN_PREFIX').'instructor/display-order') }}">
+                            <i class="fa fa-sort"></i>
+                            <span class="nav-label">Display Order</span>
+                        </a>
+                    </li>
+
+                </ul>
             </li>
             @endcan
 
@@ -52,11 +76,30 @@
             @endrole
 
             @can('discipline')
-            <li class="{{ isActiveRoute(['admin::discipline', 'admin::creatediscipline', 'admin::editdiscipline']) }}">
-                <a href="{{ url(config('settings.ADMIN_PREFIX').'discipline') }}">
+            <li class="{{ isActiveRoute(['admin::discipline', 'admin::creatediscipline', 'admin::editdiscipline', 'admin::admin.discipline.displayorder']) }}">
+                <a href="javascript:;">
                     <i class="fa fa-user-secret"></i>
-                    <span class="nav-label">Disciplines</span></a>
+                    <span class="nav-label">Disciplines</span>
+                    <span class="fa arrow"></span>
+                </a>
+                <ul class="nav nav-second-level">
+
+                    <li class="{{ isActiveRoute(['admin::discipline', 'admin::creatediscipline', 'admin::editdiscipline']) }}">
+                        <a href="{{ url(config('settings.ADMIN_PREFIX').'discipline') }}">
+                            <i class="fa fa-user-secret"></i>
+                            <span class="nav-label">Disciplines</span></a>
+                    </li>
+
+                    <li class="{{ isActiveRoute(['admin::admin.discipline.displayorder']) }}">
+                        <a href="{{ url(config('settings.ADMIN_PREFIX').'discipline/display-order') }}">
+                            <i class="fa fa-sort"></i>
+                            <span class="nav-label">Display Order</span>
+                        </a>
+                    </li>
+
+                </ul>
             </li>
+            
             @endcan
 
             @can('course_categories')
@@ -99,6 +142,7 @@
                 </a>
             </li>
             @endcan
+            
             @can('course_categories')
             <li class="{{ isActiveRoute(['admin::bannerChange', 'admin::editBannerVideo']) }}">
                 <a href="{{ url(config('settings.ADMIN_PREFIX').'bannerChange') }}">
@@ -107,6 +151,16 @@
                 </a>
             </li>
             @endcan
+            
+            @can('course_categories')
+            <li class="{{ isActiveRoute(['admin::bannerChange', 'admin::editBannerVideo']) }}">
+                <a href="{{ url(config('settings.ADMIN_PREFIX').'bannerChange') }}">
+                    <i class="fa fa-list-alt"></i>
+                    <span class="nav-label">Change Banner Video</span></span>
+                </a>
+            </li>
+            @endcan
+
             @role('super_admin')
             <li
                 class="{{ isActiveRoute(['roles.index','roles.create','roles.edit','permission.index','permission.create','permission.edit','role-permission.index','role-permission.edit']) }}">
@@ -192,6 +246,22 @@
                 </a>
             </li>
             @endcan
+            
+            <li
+                class="{{ isActiveRoute(['admin::faq.index']) }}">
+                <a href="{{ url(config('settings.ADMIN_PREFIX').'faq') }}">
+                    <i class="fa fa-question-circle"></i>
+                    <span class="nav-label">FAQ</span></span>
+                </a>
+            </li>
+            
+            <li
+                class="{{ isActiveRoute(['admin::all.tab.password']) }}">
+                <a href="{{ url(config('settings.ADMIN_PREFIX').'all-tab-password') }}">
+                    <i class="fa fa-key"></i>
+                    <span class="nav-label">All Tab Password</span></span>
+                </a>
+            </li>
 
         </ul>
     </div>

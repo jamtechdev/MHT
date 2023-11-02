@@ -26,6 +26,12 @@
                             action="{{ url('admins/discipline') }}" enctype="multipart/form-data">
                             @csrf
                             @include("admin.discipline._form")
+
+                            <div class="form-group mt-2 mb-4">
+                                <label for="discipline-img">Discipline Image</label>
+                                <input type="file" name="discipline_img" id="discipline-img" class="form-control">
+                            </div>
+                            
                             <div class="text-center">
                                 <a href="{{ url('admins/discipline') }}" class="btn btn-white btn-sm">Cancel</a>
                                 <button class="btn btn-primary btn-sm" type="submit"><i class="fa fa-check"></i>

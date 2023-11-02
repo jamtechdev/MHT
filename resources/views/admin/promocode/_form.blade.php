@@ -17,15 +17,11 @@
 		<select name="price_type" id="price_type" class="form-control" style="height:2.2rem;" {{ isset($result) ? 'disabled' : '' }}>
 			<option value="">------ Select Price Type -----</option>
 			@if(isset($result))
-			{
 				<option value="1" {{ $result->price_type == 1 ? 'selected' : '' }}>Percentage</option>
 				<option value="2" {{ $result->price_type == 2 ? 'selected' : '' }}>Amount</option>
-			}
 			@else
-			{
 				<option value="1">Percentage</option>
 				<option value="2">Amount</option>
-			}
 			@endif
 			
 		</select>

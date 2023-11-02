@@ -178,11 +178,15 @@
                                         @enderror
                                     </div>
                                     <div class="mb-2">
-                                        <label for="country" class="col-form-label">Country <span
-                                                class="text-primary">*</span></label>
-                                        <input id="country" type="text"
-                                            class="form-control @error('country') is-invalid @enderror" name="country"
-                                            value="{{ old('country') }}" required maxlength="50">
+                                        <label for="country" class="col-form-label">Country <span class="text-primary">*</span></label>
+                                        {{-- <input id="country" type="text" class="form-control @error('country') is-invalid @enderror" name="country" value="{{ old('country') }}" required maxlength="50"> --}}
+                                        <select id="country" class="form-control @error('country') is-invalid @enderror" name="country" value="{{ old('country') }}" required>
+                                            <option value="">-- Select any country --</option>
+                                            @forelse($countries as $key => $country)
+                                                <option @if(old('country') == $country->name) selected @endif value="{{ $country->name }}">{{ $country->name }}</option>
+                                            @empty
+                                            @endforelse
+                                        </select>
                                         @error('country')
                                         <span class="invalid-feedback" role="alert">
                                             <strong>{{ $message }}</strong>

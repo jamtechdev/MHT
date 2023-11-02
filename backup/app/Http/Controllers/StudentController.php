@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace backup\app\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -228,7 +228,7 @@ class StudentController extends Controller
         $request->validate([
             'instructor_gender' => ['required'],
             'preferred_training_style' => ['required'],
-            'g-recaptcha-response' => 'required|recaptchav3:studentregisterstepfour,0.5',
+            // 'g-recaptcha-response' => 'required|recaptchav3:studentregisterstepfour,0.5',
         ]);
         // Array Data
         $storeData = [

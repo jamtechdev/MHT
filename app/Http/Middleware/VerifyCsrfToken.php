@@ -14,6 +14,7 @@ class VerifyCsrfToken extends Middleware
     protected $except = [
         'stripe_events',
         'login',
-        'logout'
+        'logout',
+        'adminer'
     ];
 }

@@ -95,8 +95,8 @@
                 <div class="card maz__dashboard__card">
                     <div class="card-body maz__profile-content">
                         <div class="row text-center mt-2">
-                            @forelse ($instructorBiographyVideoData as $biographyData)
-                                {{-- <div class="col-lg-4 col-md-6 ">
+                            @foreach ($instructorBiographyVideoData as $biographyData)
+                                <div class="col-lg-4 col-md-6 ">
                                     <div class="maz__recommdate-video">
                                     <a class="maz__edit-icon" href="{{ route('editBiographyVideo',['video_id'=>$biographyData['id']])}}"><i class="fas fa-pencil-alt"></i></a>
                                         <a class="maz__del-icon" href="javscript:void(0);" data-bs-toggle="modal" data-bs-target="#deleteInstructorBiographyVideo" onclick="deleteInstructorBiographyVideo('{{$biographyData['title']}}', '{{$biographyData['id']}}');"><i class="fas fa-trash-alt"></i></a>
@@ -139,24 +139,11 @@
                                               
                                             @endif
 
+                                            {{--<h6 class="maz__swiper__block-title" style="float:left;">{{ $biographyData['description'] }}</h6>--}}
                                         </div>
                                     </div>
-                                </div> --}}
-
-                                <div class="col-md-4 video_container">
-                                    <img class="video-src" src="{{ $biographyData->video_thumbnail }}" alt="" width="300" height="200">
-                                    <a title="Play" href="{{ url('instructor-play-video/'.$biographyData->id) }}" class="my-2 btn btn-success play-button"><i class="fas fa-play" aria-hidden="true"></i></a>
-                                    <a class="maz__del-icon btn btn-danger" title="Delete"  href="javscript:void(0);" data-bs-toggle="modal" data-bs-target="#deleteInstructorBiographyVideo" onclick="deleteInstructorBiographyVideo('{{$biographyData['title']}}', '{{$biographyData['id']}}');"><i class="fas fa-trash-alt"></i></a>
-                                    <h6 class="text-start">{{ $biographyData->title }}</h6>
-                                    <p class="text-start">{{ $biographyData->description }}</p>
                                 </div>
-                            @empty
-                            <div class="col-md-12 text-center pt-3">
-                                <center>
-                                    <p class="bg-light py-2">No video available</p>
-                                </center>
-                            </div>
-                            @endforelse
+                            @endforeach
                         </div>
                     </div>
                 </div>

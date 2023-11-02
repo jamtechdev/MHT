@@ -27,8 +27,12 @@ use Illuminate\Support\Facades\File;
 use Mail, Hash, Auth, Storage, Str, Config;
 use Carbon\Carbon;
 use DB;
+use App\Http\Traits\DacastTrait;
+use Illuminate\Support\Facades\Auth as FacadesAuth;
+
 class InstructorController extends Controller
 {
+    use DacastTrait;
     /**
     * Set Auth Guard
     */
@@ -126,7 +130,8 @@ class InstructorController extends Controller
     */
     public function create()
     {
-        return view('front.instructors.instructor_register');
+        $countries = DB::table('countries')->get();
+        return view('front.instructors.instructor_register',compact('countries'));
     }
 
     /**
@@ -1054,7 +1059,44 @@ class InstructorController extends Controller
     */
     public function getInstructorBiographyVideo()
     {
+        if($this->guard()->user()->dacast_folder_id) {
+            // dd('if', $this->guard()->user()->dacast_folder_id, $this->guard()->user());
+            $folderId = $this->guard()->user()->dacast_folder_id;
+
+            // check if folder is already exists
+            $dacastFolderDetails = $this->getFolderDataOnDacast($folderId);
+            // dd($folderId, $dacastFolderDetails);
+            if(isset($dacastFolderDetails['status']) and ($dacastFolderDetails['status'] == 'error')){
+                $dacastFolderId = $this->createFolderOnDacast($this->createFolderName(Auth::user()->name, Auth::user()->id));
+                // dd($dacastFolderId, Auth::user()->name);
+                if(isset($dacastFolderId['status']) and ($dacastFolderId['status'] == 'success')){
+                    Auth::user()->dacast_folder_id = $dacastFolderId['data']['id'];
+                    Auth::user()->dacast_path = $dacastFolderId['data']['path'];
+                    Auth::user()->update();
+                }
+                else{
+                    echo "Folder already exists on Dacast";
+                }
+            }
+            // dd($folderDetails);
+        }
+        else{
+            
+            // Create Instructor Dacast folder Id
+            $dacastFolderId = $this->createFolderOnDacast($this->createFolderName(Auth::user()->name, Auth::user()->id));
+            if(!isset($dacastFolderId['data']['message'])){
+                Auth::user()->dacast_folder_id = $dacastFolderId['data']['id'];
+                Auth::user()->dacast_path = $dacastFolderId['data']['path'];
+                Auth::user()->update();
+                $folderId = $dacastFolderId['data']['id'];
+            }
+            // $instructorData = Instructor::where('id', '=', $this->guard()->user()->id)->first();
+            // $instructorData->wistia_project_id = $wistiaProjectId;
+            // $instructorData->save();
+
+        }
         $instructorBiographyVideoData = InstructorBiographyVideo::where('instructor_id', '=', $this->guard()->user()->id)->get();
+        // dd($instructorBiographyVideoData,$this->guard()->user());
         return view('front.instructors.instructor_biography_video', compact('instructorBiographyVideoData'));
     }
 
@@ -1067,19 +1109,44 @@ class InstructorController extends Controller
     */
     public function getInstructorAddBiographyVideo()
     {
-        $projectId = '';
+        // $projectId = '';
+
+        $folderId = '';
         // Check Instructor Wiastia Project Id Is Exist
-        if($this->guard()->user()->wistia_project_id) {
-            $projectId = $this->guard()->user()->wistia_project_id;
-        } else {
-            // Create Instructor Wiastia Project Id
-            $wistiaProjectId = createWistiaProject($this->guard()->user()->name);
-            $instructorData = Instructor::where('id', '=', $this->guard()->user()->id)->first();
-            $instructorData->wistia_project_id = $wistiaProjectId;
-            $instructorData->save();
-            $projectId = $wistiaProjectId;
+        // dd($this->guard()->user());
+        if(!$this->guard()->user()->dacast_folder_id) {
+            // Create Instructor Dacast folder Id
+            $dacastFolderId = $this->createFolderOnDacast($this->createFolderName(Auth::user()->name, Auth::user()->id));
+            if(!isset($dacastFolderId['data']['message'])){
+                Auth::user()->dacast_folder_id = $dacastFolderId['data']['id'];
+                Auth::user()->dacast_path = $dacastFolderId['data']['path'];
+                Auth::user()->update();
+            }
         }
-        return view('front.instructors.instructor_add_biography_video', compact('projectId'));
+
+        if(!$this->guard()->user()->bio_id_path){
+            $bio = $this->createSubFolderOnDacast($this->guard()->user()->dacast_path,'Bio_videos');
+            // dd($bio);
+            if(!isset($bio['data']['message'])){
+                Auth::user()->bio_id_path = $bio['data']['id'].'-'.$bio['data']['path'];
+                Auth::user()->update();
+            }
+        }
+
+        // dd($folderId, $this->guard()->user());
+
+        // if($this->guard()->user()->wistia_project_id) {
+        //     $projectId = $this->guard()->user()->wistia_project_id;
+        // } else {
+        //     // Create Instructor Wiastia Project Id
+        //     $wistiaProjectId = createWistiaProject($this->guard()->user()->name);
+        //     $instructorData = Instructor::where('id', '=', $this->guard()->user()->id)->first();
+        //     $instructorData->wistia_project_id = $wistiaProjectId;
+        //     $instructorData->save();
+        //     $projectId = $wistiaProjectId;
+        // }
+
+        return view('front.instructors.instructor_add_biography_video', compact('folderId'));
     }
 
     /**
@@ -1091,37 +1158,109 @@ class InstructorController extends Controller
     */
     public function getInstructorPostBiographyVideo(Request $request)
     {
+        set_time_limit(0);
+        // dd($request->all());
+
+        $createBio = array();
+        $uploaded_video_id = "";
+        $flag = 0;
         // Validate Add Biography Video Fields
         $request->validate([
             // 'title' => 'required|max:50|unique:instructor_biography_videos',
             'title' => 'required|max:50',
-            'description' => 'required|max:500'
+            'description' => 'required|max:500',
+            'bio_video_file' => 'required'
         ]);
 
         $checkTitle = InstructorBiographyVideo::where('title','=',$request->title)->where('deleted_at',NULL)->first();
 
         if($checkTitle)
         {
-            return back()->withInput()->with('error', 'The title has already been taken');
+            return response()->json(array('status' => 'error', 'message' => 'The title has already been taken'));
         }
 
         // If Video Not Uploaded Then
-        if(!$request->video_id) {
-            return back()->withInput()->with('error', 'Biography video is required');
+        // if(!$request->video_id) {
+        //     return back()->withInput()->with('error', 'Biography video is required');
+        // }
+
+        $image = $request->file('bio_video_file');
+        $customName = $this->createFolderName(Auth::user()->name, Auth::user()->id) . '-' . time() . '.' . $image->getClientOriginalExtension(); // Define your custom name
+
+        $path = $image->move(public_path('videos'), $customName);
+
+        $video = $this->createVideoOnDacast(base_path("public/videos/".$customName));
+
+        while(true){
+            $getCurrentVideoUploaded = $this->getVideoDetailByTitle("public/videos/".$customName);
+            if(isset($getCurrentVideoUploaded['data']['data']) and (count($getCurrentVideoUploaded['data']['data']) > 0)){
+                // dd($getCurrentVideoUploaded);
+                $getCurrentVideoUploaded = $getCurrentVideoUploaded['data']['data'][0];
+                
+                $updateVideo = array(
+                    'title' => $request->title,
+                    'description' => $request->description,
+                    'online' => true,
+                );
+                $update = $this->updateVideoOnDacast($getCurrentVideoUploaded['original_id'], $updateVideo);
+
+                $uploaded_video_id = $getCurrentVideoUploaded['original_id'];
+
+                $createBio = [
+                    'instructor_id' => $this->guard()->user()->id,
+                    'title' => $request->title,
+                    'video_name' => $request->title,
+                    'video_thumbnail' => isset($getCurrentVideoUploaded['pictures']['thumbnail'][0]) ? $getCurrentVideoUploaded['pictures']['thumbnail'][0] : NULL,
+                    'video_id' => $getCurrentVideoUploaded['original_id'],
+                    'video_duration' => $getCurrentVideoUploaded['duration'],
+                    'dacast_video_asset_id' => $getCurrentVideoUploaded['asset_id'],
+                    'description' => $request->description,
+                    'is_dacast_video' => 1,
+                    'status' => 1,
+                ];
+
+                if($this->guard()->user()->bio_id_path){
+                    
+                    // extract folder id
+                    $folder_id = explode('-',$this->guard()->user()->bio_id_path)[0];
+                    
+                    // movie video to folder 
+                    $move_to_bio = $this->addContentToFolderOnDacast($uploaded_video_id,array($folder_id));
+
+                    // create bio
+                    $addInstructorBiographyVideo = InstructorBiographyVideo::create($createBio);
+
+                    InstructorBiographyVideo::where('id','!=',$addInstructorBiographyVideo->id)->update(['status'=>"0"]);
+                    $this->deletePublicVideos($customName);
+                    return response()->json(array('status' => 'success', 'message' => 'Biography video has been added successfully'));
+                }
+                else{
+                    return response()->json(array('status' => 'error', 'message' => 'Ooops... Something Went Wrong!'));
+                }
+                break;
+            }
         }
 
-        // Get Instructor Biography Video Inputs
-        $input = $request->only(['title', 'description', 'video_thumbnail', 'video_id', 'video_name', 'video_duration','status']);
-        $input['instructor_id'] = $this->guard()->user()->id;
-        // Store Instructor Biography Video In Database
-        $addInstructorBiographyVideo = InstructorBiographyVideo::create($input);
-
-        if($addInstructorBiographyVideo) {
-            InstructorBiographyVideo::where('id','!=',$addInstructorBiographyVideo->id)->update(['status'=>"0"]);
-            return redirect('instructor_biography')->with("success", "Biography video has been added successfully");
-        } else {
-            return back()->withInput()->with('error', 'Ooops... Something Went Wrong!');
+        $fileToDelete = public_path('videos/'.$customName);
+        // dd($fileToDelete);
+        if (file_exists($fileToDelete)) {
+            unlink($fileToDelete);
         }
+
+        // dd('file uploaded successfully');
+
+        // // Get Instructor Biography Video Inputs
+        // // $input = $request->only(['title', 'description', 'video_thumbnail', 'video_id', 'video_name', 'video_duration','status']);
+        // // $input['instructor_id'] = $this->guard()->user()->id;
+        // // Store Instructor Biography Video In Database
+        // $addInstructorBiographyVideo = InstructorBiographyVideo::create($createBio);
+
+        // if($addInstructorBiographyVideo) {
+        //     InstructorBiographyVideo::where('id','!=',$addInstructorBiographyVideo->id)->update(['status'=>"0"]);
+        //     return redirect('instructor_biography')->with("success", "Biography video has been added successfully");
+        // } else {
+        //     return back()->withInput()->with('error', 'Ooops... Something Went Wrong!');
+        // }
     }
 
     /**
@@ -1162,6 +1301,39 @@ class InstructorController extends Controller
     */
     public function getInstructorDemonstrationVideo()
     {
+        if($this->guard()->user()->dacast_folder_id) {
+            // dd('if', $this->guard()->user()->dacast_folder_id, $this->guard()->user());
+            $folderId = $this->guard()->user()->dacast_folder_id;
+
+            // check if folder is already exists
+            $dacastFolderDetails = $this->getFolderDataOnDacast($folderId);
+            // dd($folderId, $dacastFolderDetails);
+            if(isset($dacastFolderDetails['status']) and ($dacastFolderDetails['status'] == 'error')){
+                $dacastFolderId = $this->createFolderOnDacast($this->createFolderName(Auth::user()->name, Auth::user()->id));
+                // dd($dacastFolderId, Auth::user()->name);
+                if(isset($dacastFolderId['status']) and ($dacastFolderId['status'] == 'success')){
+                    Auth::user()->dacast_folder_id = $dacastFolderId['data']['id'];
+                    Auth::user()->dacast_path = $dacastFolderId['data']['path'];
+                    Auth::user()->update();
+                }
+                else{
+                    echo "Folder already exists on Dacast";
+                }
+            }
+            // dd($folderDetails);
+        }
+        else{
+            
+            // Create Instructor Dacast folder Id
+            $dacastFolderId = $this->createFolderOnDacast($this->createFolderName(Auth::user()->name, Auth::user()->id));
+            if(!isset($dacastFolderId['data']['message'])){
+                Auth::user()->dacast_folder_id = $dacastFolderId['data']['id'];
+                Auth::user()->dacast_path = $dacastFolderId['data']['path'];
+                Auth::user()->update();
+                $folderId = $dacastFolderId['data']['id'];
+            }
+
+        }
         $instructorDemonstrationVideoData = InstructorDemonstrationVideos::where('instructor_id', '=', $this->guard()->user()->id)->get();
         return view('front.instructors.instructor_demonstartion_video', compact('instructorDemonstrationVideoData'));
     }
@@ -1176,19 +1348,42 @@ class InstructorController extends Controller
     */
     public function getInstructorAddDemonstationVideo()
     {
-        $projectId = '';
+        // $projectId = '';
+        // // Check Instructor Wiastia Project Id Is Exist
+        // if($this->guard()->user()->wistia_project_id) {
+        //     $projectId = $this->guard()->user()->wistia_project_id;
+        // } else {
+        //     // Create Instructor Wiastia Project Id
+        //     $wistiaProjectId = createWistiaProject($this->guard()->user()->name);
+        //     $instructorData = Instructor::where('id', '=', $this->guard()->user()->id)->first();
+        //     $instructorData->wistia_project_id = $wistiaProjectId;
+        //     $instructorData->save();
+        //     $projectId = $wistiaProjectId;
+        // }
+
+        $folderId = '';
         // Check Instructor Wiastia Project Id Is Exist
-        if($this->guard()->user()->wistia_project_id) {
-            $projectId = $this->guard()->user()->wistia_project_id;
-        } else {
-            // Create Instructor Wiastia Project Id
-            $wistiaProjectId = createWistiaProject($this->guard()->user()->name);
-            $instructorData = Instructor::where('id', '=', $this->guard()->user()->id)->first();
-            $instructorData->wistia_project_id = $wistiaProjectId;
-            $instructorData->save();
-            $projectId = $wistiaProjectId;
+        // dd($this->guard()->user());
+        if(!$this->guard()->user()->dacast_folder_id) {
+            // Create Instructor Dacast folder Id
+            $dacastFolderId = $this->createFolderOnDacast($this->createFolderName(Auth::user()->name, Auth::user()->id));
+            if(!isset($dacastFolderId['data']['message'])){
+                Auth::user()->dacast_folder_id = $dacastFolderId['data']['id'];
+                Auth::user()->dacast_path = $dacastFolderId['data']['path'];
+                Auth::user()->update();
+            }
         }
-        return view('front.instructors.instructor_add_demonstration_video', compact('projectId'));
+
+        if(!$this->guard()->user()->demo_id_path){
+            // create Demonstration video folder
+            $demo = $this->createSubFolderOnDacast($this->guard()->user()->dacast_path,'Demo_videos');
+            if(!isset($demo['data']['message'])){
+                Auth::user()->demo_id_path = $demo['data']['id'].'-'.$demo['data']['path'];
+                Auth::user()->update();
+            }
+        }
+
+        return view('front.instructors.instructor_add_demonstration_video');
     }
 
     /**
@@ -1200,33 +1395,96 @@ class InstructorController extends Controller
     */
     public function getInstructorPostDemonstrationVideo(Request $request)
     {
+        set_time_limit(0);
+
+        $createDemo = array();
+        $uploaded_video_id = "";
         // Validate Add Demonstration Video Fields
         $request->validate([
             'title' => 'required|max:50',
+            'demo_video_file' => 'required',
         ]);
 
         $checkTitle = InstructorDemonstrationVideos::where('title','=',$request->title)->where('deleted_at',NULL)->first();
 
         if($checkTitle)
         {
-            return back()->withInput()->with('error', 'The title has already been taken');
+            return response()->json(array('status' => 'error', 'message' => 'The title has already been taken'));
         }
 
-        // If Video Not Uploaded Then
-        if(!$request->video_id) {
-            return back()->withInput()->with('error', 'Demonstration video is required');
+        $image = $request->file('demo_video_file');
+        $customName = $this->createFolderName(Auth::user()->name, Auth::user()->id) . '-' . time() . '.' . $image->getClientOriginalExtension(); // Define your custom name
+
+        $path = $image->move(public_path('videos'), $customName);
+
+        $video = $this->createVideoOnDacast(base_path("public/videos/".$customName));
+
+        while(true){
+            $getCurrentVideoUploaded = $this->getVideoDetailByTitle("public/videos/".$customName);
+            if(isset($getCurrentVideoUploaded['data']['data']) and (count($getCurrentVideoUploaded['data']['data']) > 0)){
+                // dd($getCurrentVideoUploaded);
+                $getCurrentVideoUploaded = $getCurrentVideoUploaded['data']['data'][0];
+                
+                $updateVideo = array(
+                    'title' => $request->title,
+                    'online' => true,
+                );
+                $update = $this->updateVideoOnDacast($getCurrentVideoUploaded['original_id'], $updateVideo);
+
+                $uploaded_video_id = $getCurrentVideoUploaded['original_id'];
+
+                $createDemo = [
+                    'instructor_id' => $this->guard()->user()->id,
+                    'title' => $request->title,
+                    'video_name' => $request->title,
+                    'video_thumbnail' => NULL,
+                    'video_id' => $getCurrentVideoUploaded['original_id'],
+                    'video_duration' => $getCurrentVideoUploaded['duration'],
+                    'dacast_video_asset_id' => $getCurrentVideoUploaded['asset_id'],
+                    'description' => $request->description,
+                    'is_dacast_video' => 1,
+                    'status' => 1,
+                ];
+
+                if($this->guard()->user()->demo_id_path){
+                    
+                    // extract folder id
+                    $folder_id = explode('-',$this->guard()->user()->demo_id_path)[0];
+                    
+                    // movie video to folder 
+                    $move_to_bio = $this->addContentToFolderOnDacast($uploaded_video_id,array($folder_id));
+
+                    // create bio
+                    $addInstructorDemonstrationVideo = InstructorDemonstrationVideos::create($createDemo);
+
+                    InstructorDemonstrationVideos::where('id','!=',$addInstructorDemonstrationVideo->id)->update(['status'=>"0"]);
+                    $this->deletePublicVideos($customName);
+                    return response()->json(array('status' => 'success', 'message' => 'Demonstration video has been added successfully'));
+                }
+                else{
+                    return response()->json(array('status' => 'error', 'message' => 'Ooops... Something Went Wrong!'));
+                }
+                break;
+            }
         }
 
-        // Get Instructor Demonstration Video Inputs
-        $input = $request->only(['title', 'video_thumbnail', 'video_id', 'video_name', 'video_duration','status']);
-        $input['instructor_id'] = $this->guard()->user()->id;
-        // Store Instructor Demonstration Video In Database
-        $addInstructorDemonstrationVideo = InstructorDemonstrationVideos::create($input);
-        if($addInstructorDemonstrationVideo) {
-            return redirect('instructor_demonstration')->with("success", "Demonstration video has been added successfully");
-        } else {
-            return back()->withInput()->with('error', 'Ooops... Something Went Wrong!');
-        }
+        
+
+        // // If Video Not Uploaded Then
+        // if(!$request->video_id) {
+        //     return back()->withInput()->with('error', 'Demonstration video is required');
+        // }
+
+        // // Get Instructor Demonstration Video Inputs
+        // $input = $request->only(['title', 'video_thumbnail', 'video_id', 'video_name', 'video_duration','status']);
+        // $input['instructor_id'] = $this->guard()->user()->id;
+        // // Store Instructor Demonstration Video In Database
+        // $addInstructorDemonstrationVideo = InstructorDemonstrationVideos::create($input);
+        // if($addInstructorDemonstrationVideo) {
+        //     return redirect('instructor_demonstration')->with("success", "Demonstration video has been added successfully");
+        // } else {
+        //     return back()->withInput()->with('error', 'Ooops... Something Went Wrong!');
+        // }
     }
 
     /**
@@ -1337,8 +1595,44 @@ class InstructorController extends Controller
     */
     public function getInstructorVideos()
     {
+        if($this->guard()->user()->dacast_folder_id) {
+            // dd('if', $this->guard()->user()->dacast_folder_id, $this->guard()->user());
+            $folderId = $this->guard()->user()->dacast_folder_id;
+
+            // check if folder is already exists
+            $dacastFolderDetails = $this->getFolderDataOnDacast($folderId);
+            // dd($folderId, $dacastFolderDetails);
+            if(isset($dacastFolderDetails['status']) and ($dacastFolderDetails['status'] == 'error')){
+                $dacastFolderId = $this->createFolderOnDacast($this->createFolderName(Auth::user()->name, Auth::user()->id));
+                // dd($dacastFolderId, Auth::user()->name);
+                if(isset($dacastFolderId['status']) and ($dacastFolderId['status'] == 'success')){
+                    Auth::user()->dacast_folder_id = $dacastFolderId['data']['id'];
+                    Auth::user()->dacast_path = $dacastFolderId['data']['path'];
+                    Auth::user()->update();
+                }
+                else{
+                    echo "Folder already exists on Dacast";
+                }
+            }
+            // dd($folderDetails);
+        }
+        else{
+            
+            // Create Instructor Dacast folder Id
+            $dacastFolderId = $this->createFolderOnDacast($this->createFolderName(Auth::user()->name, Auth::user()->id));
+            if(!isset($dacastFolderId['data']['message'])){
+                Auth::user()->dacast_folder_id = $dacastFolderId['data']['id'];
+                Auth::user()->dacast_path = $dacastFolderId['data']['path'];
+                Auth::user()->update();
+                $folderId = $dacastFolderId['data']['id'];
+            }
+            // $instructorData = Instructor::where('id', '=', $this->guard()->user()->id)->first();
+            // $instructorData->wistia_project_id = $wistiaProjectId;
+            // $instructorData->save();
+
+        }
         $instructorVideoData = InstructorVideos::where('instructor_id', '=', $this->guard()->user()->id)->get();
-      
+        // dd($instructorVideoData);
         return view('front.instructors.instructor_videos', compact('instructorVideoData'));
     }
 
@@ -1353,15 +1647,34 @@ class InstructorController extends Controller
     {
         $projectId = '';
         // Check Instructor Wiastia Project Id Is Exist
-        if($this->guard()->user()->wistia_project_id) {
-            $projectId = $this->guard()->user()->wistia_project_id;
-        } else {
-            // Create Instructor Wiastia Project Id
-            $wistiaProjectId = createWistiaProject($this->guard()->user()->name);
-            $instructorData = Instructor::where('id', '=', $this->guard()->user()->id)->first();
-            $instructorData->wistia_project_id = $wistiaProjectId;
-            $instructorData->save();
-            $projectId = $wistiaProjectId;
+        // if($this->guard()->user()->wistia_project_id) {
+        //     $projectId = $this->guard()->user()->wistia_project_id;
+        // } else {
+        //     // Create Instructor Wiastia Project Id
+        //     $wistiaProjectId = createWistiaProject($this->guard()->user()->name);
+        //     $instructorData = Instructor::where('id', '=', $this->guard()->user()->id)->first();
+        //     $instructorData->wistia_project_id = $wistiaProjectId;
+        //     $instructorData->save();
+        //     $projectId = $wistiaProjectId;
+        // }
+
+        if(!$this->guard()->user()->dacast_folder_id) {
+            // Create Instructor Dacast folder Id
+            $dacastFolderId = $this->createFolderOnDacast($this->createFolderName(Auth::user()->name, Auth::user()->id));
+            if(!isset($dacastFolderId['data']['message'])){
+                Auth::user()->dacast_folder_id = $dacastFolderId['data']['id'];
+                Auth::user()->dacast_path = $dacastFolderId['data']['path'];
+                Auth::user()->update();
+            }
+        }
+
+        if(!$this->guard()->user()->teach_id_path){
+            $teach = $this->createSubFolderOnDacast($this->guard()->user()->dacast_path,'Teach_videos');
+            // dd($teach);
+            if(!isset($teach['data']['message'])){
+                Auth::user()->teach_id_path = $teach['data']['id'].'-'.$teach['data']['path'];
+                Auth::user()->update();
+            }
         }
 
         $mainCourseCategories = CourseCategory::where('id','!=',5)->get();
@@ -1381,11 +1694,14 @@ class InstructorController extends Controller
 
     public function getInstructorPostVideo(Request $request)
     {
+        set_time_limit(0);
+        // dd($request->all());
         // Validate Add Demonstration Video Fields
         $request->validate([
             'title' => 'required|max:50',
             'main_course_category_id'=>'required',
             'discipline_id'=>'required',
+            'teach_video_file'=>'required',
         ]);
 
         $checkTitle = InstructorVideos::where('title','=',$request->title)->where('deleted_at',NULL)->first();
@@ -1396,20 +1712,82 @@ class InstructorController extends Controller
         }
 
         // If Video Not Uploaded Then
-        if(!$request->video_id) {
-            return back()->withInput()->with('error', 'video is required');
+        // if(!$request->video_id) {
+        //     return back()->withInput()->with('error', 'video is required');
+        // }
+
+        $createTeach = array();
+        $uploaded_video_id = "";
+
+        $image = $request->file('teach_video_file');
+        $customName = $this->createFolderName(Auth::user()->name, Auth::user()->id) . '-' . time() . '.' . $image->getClientOriginalExtension(); // Define your custom name
+
+        $path = $image->move(public_path('videos'), $customName);
+
+        $video = $this->createVideoOnDacast(base_path("public/videos/".$customName));
+
+        while(true){
+            $getCurrentVideoUploaded = $this->getVideoDetailByTitle("public/videos/".$customName);
+            if(isset($getCurrentVideoUploaded['data']['data']) and (count($getCurrentVideoUploaded['data']['data']) > 0)){
+                // dd($getCurrentVideoUploaded);
+                $getCurrentVideoUploaded = $getCurrentVideoUploaded['data']['data'][0];
+                
+                $updateVideo = array(
+                    'title' => $request->title,
+                    'description' => isset($request->description) ? $request->description : 'Teaching Description',
+                    'online' => true,
+                );
+                $update = $this->updateVideoOnDacast($getCurrentVideoUploaded['original_id'], $updateVideo);
+
+                $uploaded_video_id = $getCurrentVideoUploaded['original_id'];
+
+                $createTeach = [
+                    'instructor_id' => $this->guard()->user()->id,
+                    'title' => $request->title,
+                    'main_course_category_id' => $request->main_course_category_id,
+                    'discipline_id' => $request->discipline_id,
+                    'video_name' => $request->title,
+                    'video_thumbnail' => isset($getCurrentVideoUploaded['pictures']['thumbnail'][0]) ? $getCurrentVideoUploaded['pictures']['thumbnail'][0] : NULL,
+                    'video_id' => $getCurrentVideoUploaded['original_id'],
+                    'video_duration' => $getCurrentVideoUploaded['duration'],
+                    'dacast_video_asset_id' => $getCurrentVideoUploaded['asset_id'],
+                    'is_dacast_video' => 1,
+                    'status' => 1,
+                ];
+
+                if($this->guard()->user()->teach_id_path){
+                    
+                    // extract folder id
+                    $folder_id = explode('-',$this->guard()->user()->teach_id_path)[0];
+                    
+                    // move video to folder 
+                    $move_to_bio = $this->addContentToFolderOnDacast($uploaded_video_id,array($folder_id));
+
+                    // create bio
+                    $instructorVideos = InstructorVideos::create($createTeach);
+
+                    InstructorBiographyVideo::where('id','!=',$instructorVideos->id)->update(['status'=>"0"]);
+                    $this->deletePublicVideos($customName);
+                    // return response()->json(array('status' => 'success', 'message' => 'Biography video has been added successfully'));
+                    return redirect()->route('instructor_videos')->with('success', 'Teaching video has been added successfully');
+                }
+                else{
+                    return redirect()->back()->with('error', 'Ooops... Something Went Wrong!');
+                }
+                break;
+            }
         }
 
         // Get Instructor Demonstration Video Inputs
-        $input = $request->only(['title','main_course_category_id','discipline_id','video_thumbnail', 'video_id', 'video_name', 'video_duration','status']);
-        $input['instructor_id'] = $this->guard()->user()->id;
-        // Store Instructor Demonstration Video In Database
-        $addInstructorDemonstrationVideo = InstructorVideos::create($input);
-        if($addInstructorDemonstrationVideo) {
-            return redirect('instructor_videos')->with("success", "Video has been added successfully");
-        } else {
-            return back()->withInput()->with('error', 'Ooops... Something Went Wrong!');
-        }
+        // $input = $request->only(['title','main_course_category_id','discipline_id','video_thumbnail', 'video_id', 'video_name', 'video_duration','status']);
+        // $input['instructor_id'] = $this->guard()->user()->id;
+        // // Store Instructor Demonstration Video In Database
+        // $addInstructorDemonstrationVideo = InstructorVideos::create($input);
+        // if($addInstructorDemonstrationVideo) {
+        //     return redirect('instructor_videos')->with("success", "Video has been added successfully");
+        // } else {
+        //     return back()->withInput()->with('error', 'Ooops... Something Went Wrong!');
+        // }
     }
 
     /**
@@ -1422,7 +1800,7 @@ class InstructorController extends Controller
     */
     public function getVideoDatatable(InstructorVideos $videos)
     {
-        $banners = $videos->where('instructor_id', '=', $this->guard()->user()->id)->get();
+        $banners = $videos->where('instructor_id', '=', $this->guard()->user()->id)->orderBy('id','DESC')->get();
 
         $result = array();
 
@@ -1518,6 +1896,8 @@ class InstructorController extends Controller
     */
     public function updateVideo(Request $request, InstructorVideos $videos)
     {
+        // dd($request->all());
+        set_time_limit(0);
         // Validate Add Demonstration Video Fields
         $request->validate([
             'title' => 'required|max:50',
@@ -1525,27 +1905,117 @@ class InstructorController extends Controller
             'discipline_id'=>'required',
         ]);
 
-        // If Video Not Uploaded Then
-        if(!$request->video_id) {
-            return back()->withInput()->with('error', 'video is required');
-        }
-
+        $title = $request->title;
         $videos = $videos->find($request->id);
-        $videos->main_course_category_id =  $request->main_course_category_id;
-        $videos->discipline_id =  $request->discipline_id;
-        $videos->title =  $request->title;
-        $videos->video_name =  $request->video_name;
-        $videos->video_thumbnail =  $request->video_thumbnail;
-        $videos->video_id =  $request->video_id;
-        $videos->video_duration =  $request->video_duration;
-        $isEdit = $videos->update();
+        $videos->main_course_category_id = $request->main_course_category_id;
+        
+
+        if($request->hasFile('teach_video_file')){
+            $image = $request->file('teach_video_file');
+            $customName = $this->createFolderName(Auth::user()->name, Auth::user()->id) . '-' . time() . '.' . $image->getClientOriginalExtension(); // Define your custom name
+
+            $path = $image->move(public_path('videos'), $customName);
+
+            $video = $this->createVideoOnDacast(base_path("public/videos/".$customName));
+            while(true){
+                $getCurrentVideoUploaded = $this->getVideoDetailByTitle("public/videos/".$customName);
+                if(isset($getCurrentVideoUploaded['data']['data']) and (count($getCurrentVideoUploaded['data']['data']) > 0)){
+                    // dd($getCurrentVideoUploaded);
+                    $video = $this->deleteVideoByID($videos['video_id']);
+                    $getCurrentVideoUploaded = $getCurrentVideoUploaded['data']['data'][0];
+                    
+                    $updateVideo = array(
+                        'title' => $request->title,
+                        'description' => isset($request->description) ? $request->description : 'Test Description',
+                        'online' => true,
+                    );
+                    $update = $this->updateVideoOnDacast($getCurrentVideoUploaded['original_id'], $updateVideo);
+                    // dd($update);
+                    $uploaded_video_id = $getCurrentVideoUploaded['original_id'];
+    
+    
+                    if($this->guard()->user()->teach_id_path){
+                        
+                        // extract folder id
+                        $folder_id = explode('-',$this->guard()->user()->teach_id_path)[0];
+                        
+                        // movie video to folder 
+                        $move_to_bio = $this->addContentToFolderOnDacast($uploaded_video_id,array($folder_id));
+                        $videos->title =  $request->title;
+                        $videos->main_course_category_id =  $request->main_course_category_id;
+                        $videos->discipline_id =  $request->discipline_id;
+                        $videos->video_name =  $request->title;
+                        $videos->video_id =  $getCurrentVideoUploaded['original_id'];
+                        $videos->dacast_video_asset_id =  $getCurrentVideoUploaded['asset_id'];
+                        $videos->video_duration =  $getCurrentVideoUploaded['duration'];
+                        $videos->video_thumbnail =  isset($getCurrentVideoUploaded['pictures']['thumbnail'][0]) ? $getCurrentVideoUploaded['pictures']['thumbnail'][0] : NULL;
+                        $isEdit = $videos->update();
+                        
+                        $this->deletePublicVideos($customName);
+                    }
+                    else{
+                        $isEdit = $videos->update();
+                    }
+                    break;
+                }
+            }
+        }
+        else{
+            // if($videos->title !=  $request->title){
+            //     $updateVideo['title'] = $request->title;
+            // }
+            
+            // if($videos->description !=  $request->description){
+            //     $updateVideo['description'] = $request->description;
+            // }
+
+            // dd($videos->title !=  $title, $videos->title ,  $title);
+            if(($videos->title !=  $title)){
+
+                $updateVideo = array(
+                    'title' => $title,
+                    'online' => true,
+                );
+                $update = $this->updateVideoOnDacast($videos['video_id'], $updateVideo);
+                // dd($update, $videos['video_id']);
+                $videos->title =  $title;
+                $videos->main_course_category_id =  $request->main_course_category_id;
+                $videos->discipline_id =  $request->discipline_id;
+                $isEdit = $videos->update();
+            }
+            else{
+                $isEdit = $videos->update();
+            }
+        }
 
         if($isEdit)
         {
-            return redirect('instructor_videos')->with("success", "Video has been updated successfully");
+            return redirect('instructor_videos')->with("success", "Teaching video has been updated successfully");
         } else {
             return back()->withInput()->with('error', 'Ooops... Something Went Wrong!');
         }
+
+        // If Video Not Uploaded Then
+        // if(!$request->video_id) {
+        //     return back()->withInput()->with('error', 'video is required');
+        // }
+
+        // $videos = $videos->find($request->id);
+        // $videos->main_course_category_id =  $request->main_course_category_id;
+        // $videos->discipline_id =  $request->discipline_id;
+        // $videos->title =  $request->title;
+        // $videos->video_name =  $request->video_name;
+        // $videos->video_thumbnail =  $request->video_thumbnail;
+        // $videos->video_id =  $request->video_id;
+        // $videos->video_duration =  $request->video_duration;
+        // $isEdit = $videos->update();
+
+        // if($isEdit)
+        // {
+        //     return redirect('instructor_videos')->with("success", "Video has been updated successfully");
+        // } else {
+        //     return back()->withInput()->with('error', 'Ooops... Something Went Wrong!');
+        // }
     }
 
     /**
@@ -2033,23 +2503,111 @@ class InstructorController extends Controller
     public function updateDemonstrationVideo(Request $request)
     {
 
+        set_time_limit(0);
         // Validate Add Demonstration Video Fields
         $request->validate([
             'title' => 'required|max:50',
         ]);
 
-        // If Video Not Uploaded Then
-        if(!$request->video_id) {
-            return back()->withInput()->with('error', 'video is required');
-        }
+        // dd($request->all());
+        // Validate Add Demonstration Video Fields
+        // $request->validate([
+        //     'title' => 'required|max:50',
+        //     'description' => 'required|max:50',
+        // ]);
+
+        // // If Video Not Uploaded Then
+        // if(!$request->video_id) {
+        //     return back()->withInput()->with('error', 'video is required');
+        // }
+
+        $title = $request->title;
+        $description = $request->description;
 
         $videos = InstructorDemonstrationVideos::find($request->id);
-        $videos->title =  $request->title;
-        $videos->video_name =  $request->video_name;
-        $videos->video_thumbnail =  $request->video_thumbnail;
-        $videos->video_id =  $request->video_id;
-        $videos->video_duration =  $request->video_duration;
-        $isEdit = $videos->update();
+
+        // dd($request->all(), $videos->toArray(), $videos['video_id']);
+        
+
+        if($request->hasFile('demo_video_file')){
+            $image = $request->file('demo_video_file');
+            $customName = $this->createFolderName(Auth::user()->name, Auth::user()->id) . '-' . time() . '.' . $image->getClientOriginalExtension(); // Define your custom name
+
+            $path = $image->move(public_path('videos'), $customName);
+
+            $video = $this->createVideoOnDacast(base_path("public/videos/".$customName));
+            while(true){
+                $getCurrentVideoUploaded = $this->getVideoDetailByTitle("public/videos/".$customName);
+                if(isset($getCurrentVideoUploaded['data']['data']) and (count($getCurrentVideoUploaded['data']['data']) > 0)){
+                    // dd($getCurrentVideoUploaded);
+                    
+                    // delete video
+                    $video = $this->deleteVideoByID($videos['video_id']);
+
+                    $getCurrentVideoUploaded = $getCurrentVideoUploaded['data']['data'][0];
+                    
+                    $updateVideo = array(
+                        'title' => $request->title,
+                        'description' => $request->description,
+                        'online' => true,
+                    );
+                    $update = $this->updateVideoOnDacast($getCurrentVideoUploaded['original_id'], $updateVideo);
+                    // dd($update);
+                    $uploaded_video_id = $getCurrentVideoUploaded['original_id'];
+    
+    
+                    if($this->guard()->user()->demo_id_path){
+                        
+                        // extract folder id
+                        $folder_id = explode('-',$this->guard()->user()->demo_id_path)[0];
+                        
+                        // movie video to folder 
+                        $move_to_bio = $this->addContentToFolderOnDacast($uploaded_video_id,array($folder_id));
+                        $videos->title =  $request->title;
+                        $videos->video_name =  $request->title;
+                        $videos->video_id =  $getCurrentVideoUploaded['original_id'];
+                        $videos->dacast_video_asset_id =  $getCurrentVideoUploaded['asset_id'];
+                        $videos->video_duration =  $getCurrentVideoUploaded['duration'];
+                        $videos->video_thumbnail =  isset($getCurrentVideoUploaded['pictures']['thumbnail'][0]) ? $getCurrentVideoUploaded['pictures']['thumbnail'][0] : NULL;
+                        $isEdit = $videos->update();
+                        
+                        $this->deletePublicVideos($customName);
+                    }
+                    else{
+                        $isEdit = $videos->update();
+                    }
+                    break;
+                }
+            }
+        }
+        else{
+            if(($videos->title !=  $title)){
+
+                $updateVideo = array(
+                    'title' => $title,
+                    'online' => true,
+                );
+                $update = $this->updateVideoOnDacast($videos['video_id'], $updateVideo);
+                $videos->title =  $title;
+                $isEdit = $videos->update();
+            }
+            else{
+                $isEdit = $videos->update();
+            }
+        }
+
+        // If Video Not Uploaded Then
+        // if(!$request->video_id) {
+        //     return back()->withInput()->with('error', 'video is required');
+        // }
+
+        // $videos = InstructorDemonstrationVideos::find($request->id);
+        // $videos->title =  $request->title;
+        // $videos->video_name =  $request->video_name;
+        // $videos->video_thumbnail =  $request->video_thumbnail;
+        // $videos->video_id =  $request->video_id;
+        // $videos->video_duration =  $request->video_duration;
+        // $isEdit = $videos->update();
 
         if($isEdit)
         {
@@ -2100,24 +2658,103 @@ class InstructorController extends Controller
     public function updateBiographyVideo(Request $request)
     {
 
+        set_time_limit(0);
+        // dd($request->all());
         // Validate Add Demonstration Video Fields
         $request->validate([
             'title' => 'required|max:50',
+            'description' => 'required|max:50',
         ]);
 
-        // If Video Not Uploaded Then
-        if(!$request->video_id) {
-            return back()->withInput()->with('error', 'video is required');
-        }
+        // // If Video Not Uploaded Then
+        // if(!$request->video_id) {
+        //     return back()->withInput()->with('error', 'video is required');
+        // }
+
+        $title = $request->title;
+        $description = $request->description;
 
         $videos = InstructorBiographyVideo::find($request->id);
-        $videos->title =  $request->title;
-        $videos->video_name =  $request->video_name;
-        $videos->video_thumbnail =  $request->video_thumbnail;
-        $videos->video_id =  $request->video_id;
-        $videos->video_duration =  $request->video_duration;
-        $videos->description =  $request->description;
-        $isEdit = $videos->update();
+
+        // dd($request->all(), $videos->toArray(), $videos['video_id']);
+        
+
+        if($request->hasFile('bio_video_file')){
+            $image = $request->file('bio_video_file');
+            $customName = $this->createFolderName(Auth::user()->name, Auth::user()->id) . '-' . time() . '.' . $image->getClientOriginalExtension(); // Define your custom name
+
+            $path = $image->move(public_path('videos'), $customName);
+
+            $video = $this->createVideoOnDacast(base_path("public/videos/".$customName));
+            while(true){
+                $getCurrentVideoUploaded = $this->getVideoDetailByTitle("public/videos/".$customName);
+                if(isset($getCurrentVideoUploaded['data']['data']) and (count($getCurrentVideoUploaded['data']['data']) > 0)){
+                    // dd($getCurrentVideoUploaded);
+                    $video = $this->deleteVideoByID($videos['video_id']);
+                    $getCurrentVideoUploaded = $getCurrentVideoUploaded['data']['data'][0];
+                    
+                    $updateVideo = array(
+                        'title' => $request->title,
+                        'description' => $request->description,
+                        'online' => true,
+                    );
+                    $update = $this->updateVideoOnDacast($getCurrentVideoUploaded['original_id'], $updateVideo);
+                    // dd($update);
+                    $uploaded_video_id = $getCurrentVideoUploaded['original_id'];
+    
+    
+                    if($this->guard()->user()->bio_id_path){
+                        
+                        // extract folder id
+                        $folder_id = explode('-',$this->guard()->user()->bio_id_path)[0];
+                        
+                        // movie video to folder 
+                        $move_to_bio = $this->addContentToFolderOnDacast($uploaded_video_id,array($folder_id));
+                        $videos->title =  $request->title;
+                        $videos->description =  $request->description;
+                        $videos->video_name =  $request->title;
+                        $videos->video_id =  $getCurrentVideoUploaded['original_id'];
+                        $videos->dacast_video_asset_id =  $getCurrentVideoUploaded['asset_id'];
+                        $videos->video_duration =  $getCurrentVideoUploaded['duration'];
+                        $videos->video_thumbnail =  isset($getCurrentVideoUploaded['pictures']['thumbnail'][0]) ? $getCurrentVideoUploaded['pictures']['thumbnail'][0] : NULL;
+                        $isEdit = $videos->update();
+                        
+                        $this->deletePublicVideos($customName);
+                    }
+                    else{
+                        $isEdit = $videos->update();
+                    }
+                    break;
+                }
+            }
+        }
+        else{
+            // if($videos->title !=  $request->title){
+            //     $updateVideo['title'] = $request->title;
+            // }
+            
+            // if($videos->description !=  $request->description){
+            //     $updateVideo['description'] = $request->description;
+            // }
+
+            // dd($videos->title !=  $title, $videos->title ,  $title);
+            if(($videos->title !=  $title) or ($videos->description !=  $description)){
+
+                $updateVideo = array(
+                    'title' => $title,
+                    'description' => $description,
+                    'online' => true,
+                );
+                $update = $this->updateVideoOnDacast($videos['video_id'], $updateVideo);
+                // dd($update, $videos['video_id']);
+                $videos->title =  $title;
+                $videos->description =  $description;
+                $isEdit = $videos->update();
+            }
+            else{
+                $isEdit = $videos->update();
+            }
+        }
 
         if($isEdit)
         {
@@ -2220,22 +2857,10 @@ class InstructorController extends Controller
         $totalRecordswithFilter = count($banners);
 
         if(empty($searchValue)){
-            $rows =  $videos->where('instructor_id', '=', $this->guard()->user()->id)->where('main_course_category_id',$request->level)->where('discipline_id',$request->discipline)
-                // ->skip($start)
-                // ->take($rowperpage)
-                // ->toSQL();
-                ->get()
-                ->toArray();
-            // print_r($rows );die;    
+            $rows =  $videos->where('instructor_id', '=', $this->guard()->user()->id)->where('main_course_category_id',$request->level)->where('discipline_id',$request->discipline)->get()->toArray();
         }
         else{
-            $rows = $videos
-            ->where('instructor_id', '=', $this->guard()->user()->id)
-            ->where('main_course_category_id',$request->level)
-            ->where('discipline_id',$request->discipline)
-            ->where('title','like','%'.$searchValue.'%')
-            ->get()
-            ->toArray();
+            $rows = $videos->where('instructor_id', '=', $this->guard()->user()->id)->where('main_course_category_id',$request->level)->where('discipline_id',$request->discipline)->where('title','like','%'.$searchValue.'%')->get()->toArray();
 
             
             
@@ -2486,6 +3111,159 @@ class InstructorController extends Controller
         return response()->json($response);
     }
 
+    public function dacastVideoAPI(Request $request){
+
+        set_time_limit(0);
+
+        $page = $request->page ?? 1;
+        $limit = $request->limit ?? 10;
+        $videos = $this->listVideoOnDacast($page, $limit);
+        // dd($videos);
+        if(!Auth::user()->dacast_folder_id){
+            $data = $this->createFolderOnDacast($this->createFolderName(Auth::user()->name, Auth::user()->id));
+            if(!isset($data['data']['message'])){
+                Auth::user()->dacast_folder_id = $data['data']['id'];
+                Auth::user()->dacast_path = $data['data']['path'];
+                Auth::user()->update();
+            }
+        }
+
+        if(!Auth::user()->bio_id_path){
+            $bio = $this->createSubFolderOnDacast(Auth::user()->dacast_path,'Bio_videos');
+            // dd($bio);
+            if(!isset($bio['data']['message'])){
+                Auth::user()->bio_id_path = $bio['data']['id'].'-'.$bio['data']['path'];
+                Auth::user()->update();
+            }
+            // dd($bio);
+        }
+
+        if(!Auth::user()->demo_id_path){
+            $demo = $this->createSubFolderOnDacast(Auth::user()->dacast_path,'Demo_videos');
+            if(!isset($demo['data']['message'])){
+                Auth::user()->demo_id_path = $demo['data']['id'].'-'.$demo['data']['path'];
+                Auth::user()->update();
+            }
+            // dd($bio);
+        }
+
+        if(!Auth::user()->teach_id_path){
+            $teach = $this->createSubFolderOnDacast(Auth::user()->dacast_path,'Teach_videos');
+            if(!isset($teach['data']['message'])){
+                Auth::user()->teach_id_path = $teach['data']['id'].'-'.$teach['data']['path'];
+                Auth::user()->update();
+            }
+            // dd($bio);
+        }
+
+        return view('front.instructors.instructor_dacast', compact('videos'));
+    }
+
+    public function instructorVideoUpload(Request $request){
+        // dd($request->all());
+
+        // $dacast_videos = $this->listVideoOnDacast();
+        // dd($dacast_videos);
+        set_time_limit(0);
+
+        if ($request->hasFile('video')) {
+            $image = $request->file('video');
+            $customName = $this->createFolderName(Auth::user()->name, Auth::user()->id) . '-' . time() . '.' . $image->getClientOriginalExtension(); // Define your custom name
+
+            $path = $image->move(public_path('videos'), $customName);
+
+            // $video_title = $this->extractVideoTitle(basename($customName));
+            // if(!$video_title){
+            //     $videl_title = $customName;
+            // }
+
+            $video = $this->createVideoOnDacast(base_path("public/videos/".$customName));
+            // dd($video, $videl_title);
+            // $get_video_detail = $this->getVideoDetailByTitle(base_path("public/videos/".$customName));
+            
+            // $video_title = $this->extractVideoTitle(basename($customName));
+            // dd(basename($customName), $video_title);
+            // if($video_title){
+                // }
+            
+
+            while(true){
+                $getCurrentVideoUploaded = $this->getVideoDetailByTitle("public/videos/".$customName);
+                if(isset($getCurrentVideoUploaded['data']['data']) and (count($getCurrentVideoUploaded['data']['data']) > 0)){
+                    // dd($getCurrentVideoUploaded);
+                    $getCurrentVideoUploaded = $getCurrentVideoUploaded['data']['data'][0];
+                    
+                    $updateVideo = array(
+                        'title' => $customName,
+                        'description' => 'Description of the video uploaded',
+                        'online' => true,
+                    );
+                    $update = $this->updateVideoOnDacast($getCurrentVideoUploaded['original_id'], $updateVideo);
+                    break;
+                }
+            }
+
+            dd($getCurrentVideoUploaded,2702);
+            
+            $fileToDelete = public_path('videos/'.$customName);
+            // dd($fileToDelete);
+            if (file_exists($fileToDelete)) {
+                unlink($fileToDelete);
+            }
+            if(isset($video[1]['status']) and (isset($video[1]['status']) == 'success')){
+                return response()->json(array('status' => 'success', 'message' =>'video uploaded successfully'));
+            }
+            else{
+                return response()->json(array('status' => 'error', 'message' =>$video[1]['data']));
+            }
+        }
+
+    }
+
+    public function dacastVideoPlay($id){
+        $video = $this->getVideoDetailByID($id);
+        // dd($video);
+
+        if(isset($video['status']) and ($video['status'] == 'error')){
+            return redirect()->back()->with('error', $video['data']);
+        }
+        else{
+            $video = $video['data'];
+            // dd($this->extractVideoTitle($this->createFolderName(Auth::user()->name, Auth::user()->id) . '-' . time()));
+            if (strpos($video['title'], 'public/videos') !== false) {
+                // dd('f', $this->createFolderName(Auth::user()->name, Auth::user()->id) . '-' . time());
+                $video_update = $this->updateVideoTitleByID($video['id'], $this->createFolderName(Auth::user()->name, Auth::user()->id) . '-' . time());
+            }
+            
+            // dd($video);
+            return view('front.instructors.instructor_dacast_play', compact('video'));
+        }
+    }
     
+    public function createFolderName($name,$user_id){
+        $folder_parts = explode(" ", $name);
+        if (count($folder_parts) > 0) {
+            return $folder_parts[0].'_'.$user_id;
+        } else {
+            return 'folder_'.time();
+        }
+    }
+
+    public function extractVideoTitle($filename){
+        // Use preg_match to extract the desired data
+        if (preg_match('#public/videos/([^/]+)#', $filename, $matches)) {
+            return $matches[0];
+        } else {
+            return false;
+        }
+    }
+
+    public function deletePublicVideos($customName){
+        $fileToDelete = public_path('videos/'.$customName);
+        // dd($fileToDelete);
+        if (file_exists($fileToDelete)) {
+            unlink($fileToDelete);
+        }
+    }
 
 }

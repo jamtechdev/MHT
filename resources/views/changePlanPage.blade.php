@@ -97,19 +97,23 @@
 
                                             if($plan->validity_type == 1)
                                             {
-                                                $validity = $plan->validity." "."Day";
+                                                // $validity = $plan->validity." "."Day";
+                                                $validity = "Day";
                                             }
                                             elseif($plan->validity_type == 2)
                                             {
-                                                $validity = $plan->validity." "."Month";
+                                                // $validity = $plan->validity." "."Month";
+                                                $validity = "Month";
                                             }
                                             elseif($plan->validity_type == 3)
                                             {
-                                                $validity = $plan->validity." "."Year";
+                                                // $validity = $plan->validity." "."Year";
+                                                $validity = "Year";
                                             }
                                             else
                                             {
-                                                $validity = $plan->validity." ".'Lifetime';
+                                                // $validity = $plan->validity." ".'Lifetime';
+                                                $validity = 'Lifetime';
                                             }
                                         @endphp
                                     
@@ -117,15 +121,16 @@
                                         @if($plan->id == $firstPlan->id)
                                             <td><button type="button" style="min-height: 52px; border: 2px; padding: 10px; border-radius: 20px 20px;" class="btn-login plan-button curtrentPlanBtn">Current Plan</button></td>
                                         @else
-                                            @if($plan->id == 3 || $plan->id == 4)
+                                            {{-- @if($plan->id == 3 || $plan->id == 4)
                                                 <td><button type="button" class="btn-login plan-button disabled" style="width: 104%;border: 2px solid red; padding: 10px 0px; border-radius: 20px 20px;pointer-events:none;">{{ $plan->plan_name }} Plan </br> $ {{ $plan->price }} / {{ $validity  }} [ Coming Soon ]</button></td>        
-                                            @else
+                                            @else --}}
                                                 @if($plan->id == 1)
                                                     <td><a href="javascript::void(0)" type="button" style="width: 106%;border: 2px solid red; padding: 10px 0px; border-radius: 20px 20px;" class="btn-login plan-button" onclick="changePlan({{ $plan->id }})">{{ $plan->plan_name }} Plan </br> Free Always</a></td>        
                                                 @else
-                                                    <td><a href="{{ route('bronzePlanStripe',['lastPage'=>'student_subscription_manage','planId'=>$plan->id, 'sendUpgradeConfirmEmail'=>1]) }}" type="button" style="width: 106%;border: 2px solid red; padding: 10px 0px; border-radius: 20px 20px;" class="btn-login plan-button" onclick="changePlan({{ $plan->id }})">{{ $plan->plan_name }} Plan </br> $ {{ $plan->price }} / {{ $validity  }}</a></td>        
+                                                    <td><a href="{{ route('bronzePlanStripe',['lastPage'=>'student_subscription_manage','planId'=>$plan->id, 'sendUpgradeConfirmEmail'=>1,'value' => 'subscribe_bronze']) }}" type="button" style="width: 106%;border: 2px solid red; padding: 10px 0px; border-radius: 20px 20px;" class="btn-login plan-button" onclick="changePlan({{ $plan->id }})">{{ $plan->plan_name }} Plan </br> $ {{ $plan->price }} / {{ $validity  }}</a></td>        
                                                 @endif
-                                            @endif
+                                            {{-- @endif --}}
+                                            {{-- <td><a href="{{ route('bronzePlanStripe',['lastPage'=>'student_subscription_manage','planId'=>$plan->id, 'sendUpgradeConfirmEmail'=>1,'value' => 'subscribe_bronze']) }}" type="button" style="width: 106%;border: 2px solid red; padding: 10px 0px; border-radius: 20px 20px;" class="btn-login plan-button" onclick="changePlan({{ $plan->id }})">{{ $plan->plan_name }} Plan </br> $ {{ $plan->price }} / {{ $validity  }}</a></td> --}}
                                         @endif
                                     
                                     @endforeach

@@ -88,6 +88,11 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{{ route('dacastVideoAPI') }}" class="list-group-item list-group-item-action {{ isActiveRoute(['dacastVideoAPI']) }}">
+                        <i class="fas fa-video" aria-hidden="true"></i><span class="ms-2">Dacast Video API</span>
+                    </a>
+                </li>
+                <li>
                     <a href="javscript:void(0)" class="list-group-item list-group-item-action" data-bs-toggle="modal" data-bs-target="#logoutPopupInstructor"><i class="fas fa-sign-out-alt"></i> <span class="ms-2">Logout</span></a>
                 </li>
             </ul>

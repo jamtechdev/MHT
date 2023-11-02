@@ -19,6 +19,8 @@ class Discipline extends Model
         'title',
         'description',
         'photo',
+        'display_order',
+        'is_stored_system',
         'main_coming_soon_image',
         'video_coming_soon_image',
         'created_at'

@@ -2,6 +2,7 @@
 @section('content')
 {{-- Include Wistia Css --}}
 <link rel="stylesheet" href="//fast.wistia.com/assets/external/uploader.css" />
+<script src="https://player.dacast.com/js/player.js?{{ @$videoData['dacast_video_asset_id']}}"></script>
 {{-- Include Instructor Complete Profile Header --}}
 @include('front.include.instructor_complete_profile')
 <div class="maz__dashboard__wrapper">
@@ -75,16 +76,26 @@
                                                 </span>
                                             @enderror
                                         </div>
-                                        <div class="mb-5" id="player">
-                                            <div class="embed-responsive embed-responsive-16by9">
-                                                <div class="wistia_embed wistia_async_{{ $videoData['video_id']}} playlistLinks=auto autoPlay=false videoFoam=true" style="height:800px;max-width:1496px;position:relative;">&nbsp;</div>
+                                        @if($videoData['is_dacast_video'] == 1)
+                                            <div class="my-3">
+                                                <label for="biography_video_path" class="col-form-label text-md-end">Upload Teaching Video <span class="text-primary">*</span></label>
+                                                
+                                                <input type="file" accept="video/mp4" name="teach_video_file" class="form-control">
                                             </div>
-                                            <button type="button" class="btn btn-warning text-uppercase me-3 mt-2" onclick="changeVideo()">Update Teaching Video</button>
-                                        </div>
-                                        <div class="mb-3" id="uploader" hidden>
-                                            <label for="biography_video_path" class="col-form-label text-md-end">{{ __('Update Teaching Video') }} <span class="text-primary">*</span></label>
-                                            <div id="wistia_uploader" style="height:360px;width:640px;"></div>
-                                        </div>
+
+                                            <div class="my-2" id="teach-dacast-video-player"></div>
+                                        @else
+                                            <div class="my-5" id="player">
+                                                <div class="embed-responsive embed-responsive-16by9">
+                                                    <div class="wistia_embed wistia_async_{{ $videoData['video_id']}} playlistLinks=auto autoPlay=false videoFoam=true" style="height:800px;max-width:1496px;position:relative;">&nbsp;</div>
+                                                </div>
+                                                <button type="button" class="btn btn-warning text-uppercase me-3 mt-2" onclick="changeVideo()">Update Teaching Video</button>
+                                            </div>
+                                            <div class="mb-3" id="uploader" hidden>
+                                                <label for="biography_video_path" class="col-form-label text-md-end">{{ __('Update Teaching Video') }} <span class="text-primary">*</span></label>
+                                                <div id="wistia_uploader" style="height:360px;width:640px;"></div>
+                                            </div>
+                                        @endif
                                         <div class="d-inline">
                                             <button type="submit" class="btn btn-secondary dashboard_btn_lg text-uppercase me-3">Update</button>
                                             <a class="btn btn btn-primary text-uppercase dashboard_btn_danger dashboard_btn_lg" href="{{ route('instructor_videos') }}" style="min-width: 129px !important;">Cancel</a>
@@ -104,6 +115,8 @@
 <script src="//fast.wistia.com/assets/external/api.js" async></script>
 <script>
     $(document).ready(function() {
+        
+        
         $("#addBiographyVideoForm").validate({
             rules: {
                 title: {
@@ -128,30 +141,45 @@
                 discipline_id: {
                     required: "Discipline is required",
                 }
+            },
+            submitHandler: function(form) {
+                // This function will be called when the form is valid
+                $('div.main-loader-please-wait').show();
+                form.submit(); // This will submit the form
             }
         });
 
-        // Wistia Code Section
-        window._wapiq = window._wapiq || [];
-        _wapiq.push(function(W) {
-            window.wistiaUploader = new W.Uploader({
-                accessToken: "{{config("services.wistia.token")}}",
-                dropIn: "wistia_uploader",
-                projectId: '{{ $projectId }}',
-                beforeUpload: function() {
-                    wistiaUploader.setFileName($("#title").val());
-                    wistiaUploader.setFileDescription($("#description").val());
-                }
+        if('{{ @$videoData["is_dacast_video"] }}' == 1){
+            var CONTENT_ID = "{{ @$videoData['dacast_video_asset_id']}}"
+            var myPlayer = dacast(CONTENT_ID, 'teach-dacast-video-player', { 
+                width: 500, 
+                height: 300,
+                // player: "flow7"
             });
-            wistiaUploader.bind('uploadsuccess', function(file, media) {
-                if(media) {
-                    $("#video_id").val(media.id);
-                    $("#video_name").val(media.name);
-                    $("#video_duration").val(media.duration);
-                    $("#video_thumbnail").val(media.thumbnail.url);
-                }
+        }
+        else{
+            // Wistia Code Section
+            window._wapiq = window._wapiq || [];
+            _wapiq.push(function(W) {
+                window.wistiaUploader = new W.Uploader({
+                    accessToken: "{{config("services.wistia.token")}}",
+                    dropIn: "wistia_uploader",
+                    projectId: '{{ $projectId }}',
+                    beforeUpload: function() {
+                        wistiaUploader.setFileName($("#title").val());
+                        wistiaUploader.setFileDescription($("#description").val());
+                    }
+                });
+                wistiaUploader.bind('uploadsuccess', function(file, media) {
+                    if(media) {
+                        $("#video_id").val(media.id);
+                        $("#video_name").val(media.name);
+                        $("#video_duration").val(media.duration);
+                        $("#video_thumbnail").val(media.thumbnail.url);
+                    }
+                });
             });
-        });
+        }
     });
 </script>
 <script>

@@ -15,7 +15,43 @@
 </section>
 <section class="maz__sections">
     <div class="container">
-        <div class="row faq-block">
+
+        @php
+            $counting = 0;
+        @endphp
+        @forelse($faqs as $key => $faq)
+            <div class="row faq-block">
+                <div class="col-lg-3">
+                    <h2 class="faq-title">{{ $faq->heading }}</h2>
+                </div>
+                <div class="col-lg-9">
+                    <!-- Accordian start -->
+                    @forelse($faq->faq as $j => $data)
+                        <div class="accordion accordion-flush" id="accordionMartialArtsZen{{ $counting }}">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="flush-heading-{{ $counting }}">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse-{{ $counting }}" aria-expanded="false" aria-controls="flush-collapse-{{ $counting }}">
+                                        {{ $data->question }}
+                                    </button>
+                                </h2>
+                                <div id="flush-collapse-{{ $counting }}" class="accordion-collapse collapse" aria-labelledby="flush-heading-{{ $counting }}" data-bs-parent="#accordionMartialArtsZen{{ $counting }}">
+                                    <div class="accordion-body">
+                                        {{ $data->answer }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @php
+                            $counting++;
+                        @endphp
+                    @empty
+                    @endforelse
+                </div>
+            </div>
+        @empty
+        @endforelse
+
+        {{-- <div class="row faq-block">
             <div class="col-lg-3">
                 <h2 class="faq-title">Martial Arts Zen</h2>
             </div>
@@ -264,7 +300,8 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> --}}
+        
     </div>
 </section>
 @endsection

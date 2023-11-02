@@ -30,13 +30,16 @@ use DataTables;
 use Stripe;
 
 use App\Mail\ReferralMail;
-use Mail, Hash, Auth, Storage, Session;
-use Sichikawa\LaravelSendgridDriver\SendGrid;
+use Hash, Auth, Storage, Session;
+// use Sichikawa\LaravelSendgridDriver\SendGrid;
+use App\Mail\TestEmail;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
 
 class StudentController extends Controller
 {
-    use SendGrid;
+    // use SendGrid;
+
     /**
     * View Student Dashboard Page
     * Route Name : dashboard
@@ -239,7 +242,7 @@ class StudentController extends Controller
         $request->validate([
             'instructor_gender' => ['required'],
             'preferred_training_style' => ['required'],
-            'g-recaptcha-response' => 'required|recaptchav3:studentregisterstepfour,0.5',
+            // 'g-recaptcha-response' => 'required|recaptchav3:studentregisterstepfour,0.5',
         ]);
         // Array Data
         $storeData = [
@@ -1128,6 +1131,7 @@ class StudentController extends Controller
 
     public function acceptBronzPlan(Request $request)
     {
+        // dd($request->all());
         // Check User Selected Plan Is Free
         if($request->plan == 'Free') {
             // Validate Register Step One Form Data
@@ -1160,7 +1164,6 @@ class StudentController extends Controller
             $user = User::where('id',Auth::id())->first();
 
             $planId = SubscriptionPlan::where('id',$request->plan)->first();
-            
             $couponId = "";
 
             // $couponId = "fVqz2Nf6";
@@ -1180,6 +1183,7 @@ class StudentController extends Controller
             try{
                 
                 $result = stripeSubscription($user, $request, $couponId, $planId);
+                // dd($result);
 
                 if($result != 'success') {
                     return redirect()->back()->with('client_secret', $result);
@@ -1194,50 +1198,50 @@ class StudentController extends Controller
 
                 if($request->sendUpgradeConfirmEmail == 0)
                 {
-                    $template = SendgridTemplate::where('id',20)->first();
+                    // $template = SendgridTemplate::where('id',20)->first();
 
-                    $template_id = "d-".$template->template_id;    
+                    // $template_id = "d-".$template->template_id;    
 
-                    $email = new \SendGrid\Mail\Mail();
+                    // $email = new \SendGrid\Mail\Mail();
                     
-                    $email->setFrom("admin@free.martialartszen.com","MartialArtsZen");
-                    $email->setSubject('Try MartialArtsZen.com using this referral');
-                    $email->addTo($user->email);
-                    $email->addContent("text/html","Join me and improve your skills in various disciplines");
-                    $email->addDynamicTemplateDatas([
-                        "first_name"=>$user->firstname,
-                        "default"=>"Valued customer",
-                        "actionUrl"=>route('student_profile')
-                        ]);
-                    $email->setTemplateId($template_id);
+                    // $email->setFrom("admin@free.martialartszen.com","MartialArtsZen");
+                    // $email->setSubject('Try MartialArtsZen.com using this referral');
+                    // $email->addTo($user->email);
+                    // $email->addContent("text/html","Join me and improve your skills in various disciplines");
+                    // $email->addDynamicTemplateDatas([
+                    //     "first_name"=>$user->firstname,
+                    //     "default"=>"Valued customer",
+                    //     "actionUrl"=>route('student_profile')
+                    //     ]);
+                    // $email->setTemplateId($template_id);
                     
-                    $sendgrid = new \SendGrid(env('MAIL_PASSWORD'));
+                    // $sendgrid = new \SendGrid(env('MAIL_PASSWORD'));
                     
-                    $sendgrid->send($email);
+                    // $sendgrid->send($email);
 
                 }
                 if($request->sendUpgradeConfirmEmail == 1)
                 {
-                    $template = SendgridTemplate::where('id',34)->first();
+                    // $template = SendgridTemplate::where('id',34)->first();
 
-                    $template_id = "d-".$template->template_id;    
+                    // $template_id = "d-".$template->template_id;    
 
-                    $email = new \SendGrid\Mail\Mail();
+                    // $email = new \SendGrid\Mail\Mail();
                     
-                    $email->setFrom("admin@free.martialartszen.com","MartialArtsZen");
-                    $email->setSubject('Try MartialArtsZen.com using this referral');
-                    $email->addTo($user->email);
-                    $email->addContent("text/html","Join me and improve your skills in various disciplines");
-                    $email->addDynamicTemplateDatas([
-                        "first_name"=>$user->firstname,
-                        "default"=>"Valued customer",
-                        "actionUrl"=>route('student_profile')
-                        ]);
-                    $email->setTemplateId($template_id);
+                    // $email->setFrom("admin@free.martialartszen.com","MartialArtsZen");
+                    // $email->setSubject('Try MartialArtsZen.com using this referral');
+                    // $email->addTo($user->email);
+                    // $email->addContent("text/html","Join me and improve your skills in various disciplines");
+                    // $email->addDynamicTemplateDatas([
+                    //     "first_name"=>$user->firstname,
+                    //     "default"=>"Valued customer",
+                    //     "actionUrl"=>route('student_profile')
+                    //     ]);
+                    // $email->setTemplateId($template_id);
                     
-                    $sendgrid = new \SendGrid(env('MAIL_PASSWORD'));
+                    // $sendgrid = new \SendGrid(env('MAIL_PASSWORD'));
                     
-                    $sendgrid->send($email);
+                    // $sendgrid->send($email);
 
                 }
                 
@@ -1245,7 +1249,7 @@ class StudentController extends Controller
                 $user->payment_status = 1;
                 $user->save();
    
-                User::where('id', '=', Auth::id())->update(['accept_bronze_plan' => 1,'subscription_id'=>2,'upgrade_plan'=>0]);
+                User::where('id', '=', Auth::id())->update(['accept_bronze_plan' => 1,'subscription_id'=>$planId->id,'upgrade_plan'=>0]);
                     
                 Session::flash('success1', 'Payment for '.$planId->plan_name.' plan is successful. Welcome back!');
                 
@@ -1644,40 +1648,68 @@ class StudentController extends Controller
     public function getInstructorsOfCurrrentDiscipline(Request $request)
     {   
         $discipline_id = $request->disciplineSequence;
-
+        
         $currentDiscipline = Discipline::select('title', 'description', 'photo','desktop_sequence','main_coming_soon_image', 'video_coming_soon_image')->where('id',$discipline_id)->first();
-
+        
         $levels = $instructorData = $instructorFreeData = $instructorRecommendedData =$instructorBronzeData = $instructorSilverData = $instructorGoldData = [];
+        
+        // $instructorDisciplines = InstructorDiscipline::where('discipline_id',$discipline_id)->get();
+        
+        // $instructor_ids = array_map(function($item){
+        //     return $item['instructor_id'];
+        // },$instructorDisciplines->toArray());
 
-        $instructorDisciplines = InstructorDiscipline::where('discipline_id',$discipline_id)->get();
+        $instructorDisciplines = InstructorVideos::where('discipline_id',((int)$discipline_id))->get(['instructor_id']);
+        
+        $instructor_ids = $instructorDisciplines->map(function($query){
+            return $query;
+        })->unique('instructor_id');
 
+        $all_instructor = Instructor::where('is_approved', '=', 1)->whereIn('id',$instructor_ids)->orderBy('display_order','ASC')->get();
+        
+        // dd($all_instructor->toArray());
         $courseCategoryData = CourseCategory::select('id', 'name')->get();
 
-        if($instructorDisciplines)
-        {
-            foreach($instructorDisciplines as $i)
-            {
-                $instructorDBData = Instructor::where('is_approved', '=', 1)->where('id',$i->instructor_id)->first();
-              
-                if($instructorDBData)   
-                {
-                    // Get Instructor Course Category
-                    if($instructorDBData->id) {
+        // dd($courseCategoryData->toArray(), $instructorDisciplines->toArray());
+
+        // if(count($instructorDisciplines) > 0)
+        // {
+        //     foreach($instructorDisciplines as $i)
+        //     {
+        //         $instructorDBData = Instructor::where('is_approved', '=', 1)->where('id',$i->instructor_id)->first();
+
+        //         if($instructorDBData)   
+        //         {
+        //             // Get Instructor Course Category
+        //             if($instructorDBData->id) {
                         
-                        // Check Instructor Have Course Lession
-                        if(InstructorVideos::where('instructor_id', '=', $instructorDBData->id)->where('discipline_id', $discipline_id)->count()) {
+        //                 // Check Instructor Have Course Lession
+        //                 if(InstructorVideos::where('instructor_id', '=', $instructorDBData->id)->where('discipline_id', $discipline_id)->count()) {
                           
-                            array_push($instructorData, $instructorDBData);
-                            // Get Instructor Videos
-                        }
-                    }
+        //                     array_push($instructorData, $instructorDBData);
+        //                     // Get Instructor Videos
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+
+        if(count($all_instructor) > 0){
+            foreach($all_instructor as $key => $instructor){
+                if(InstructorVideos::where('instructor_id', '=', $instructor->id)->where('discipline_id', $discipline_id)->count()) {
+                    array_push($instructorData, $instructor);
                 }
             }
         }
 
+        // dd($instructorData);
+
+        // dd($courseCategoryData , $instructorData);
+
         if(count($courseCategoryData))
         {
             foreach ($courseCategoryData as $ccData) {
+                // dd($ccData->toArray());
                 $instructorRecommendedData = [];
 
                 $videoData = array();
@@ -1693,6 +1725,12 @@ class StudentController extends Controller
                             if($video)
                             {
                                 $instructorDetails = Instructor::where('id',$video->instructor_id)->first();
+                                if($video['is_dacast_video'] == 1){
+                                    $video_ducration = $video['video_duration'];
+                                }
+                                else{
+                                    $video_ducration = Carbon::parse((float)$video['video_duration'])->format('H:i:s');
+                                }
 
                                 $videoData[] = array(
                                     'video_id'=>$video['video_id'],
@@ -1700,7 +1738,8 @@ class StudentController extends Controller
                                     'title'=>$video['title'],
                                     'video_level'=>$video['main_course_category_id'],
                                     'instructor_name'=>$instructorDetails->name,
-                                    'video_duration'=>Carbon::parse($video['video_duration'])->format('i:s'),
+                                    // 'video_duration'=>Carbon::parse(number_format($video['video_duration'],2))->format('i:s'),
+                                    'video_duration' => $video_ducration,
                                 );
                             }
                             else
@@ -1852,6 +1891,8 @@ class StudentController extends Controller
         $data['instructorRecommendedData'] = $instructorRecommendedData;
         $data['levels'] = $levels;
         $data['currentDiscipline'] = $currentDiscipline;
+
+        // dd($data['instructorData']);
        // $data['instructorBronzeData'] = $instructorBronzeData;
         // echo "<pre>";
         // print_r($data['instructorFreeData']);die;
@@ -1860,6 +1901,7 @@ class StudentController extends Controller
 
     public function playInstructorVideo(Request $request)
     {
+        // dd($request->all());
         if($request->call == "Recommended")
         {
             $instructorVideoId = $request->video_id;
@@ -1869,7 +1911,6 @@ class StudentController extends Controller
             $instructorData = Instructor::where('id',$instructorLessionData->instructor_id)->first();
     
             $instructorName = $instructorLessionData->title;
-
             return view('playInstructorVideo',compact('instructorVideoId','instructorName'));
         }
 
@@ -1896,6 +1937,7 @@ class StudentController extends Controller
 
         $relatedVideos = InstructorVideos::where('main_course_category_id',$instructorLessionData->main_course_category_id)->where('instructor_id',$instructorLessionData->instructor_id)->get();
 
+        // dd($instructorVideoId, $instructorName, $relatedVideos, $instructorLessionData);
         return view('playInstructorVideo',compact('instructorVideoId','instructorName','relatedVideos','instructorLessionData'));
     }
 
@@ -2107,7 +2149,8 @@ class StudentController extends Controller
 
         $firstPlan = SubscriptionPlan::where('id','=',$user->subscription_id)
         ->where('status','!=',0)
-        ->first();  
+        ->first();
+        // dd($allPlans,$firstPlan,$benefits);
 
         return view('changePlanPage',compact('allPlans','firstPlan','benefits'));
     }
@@ -2205,4 +2248,419 @@ class StudentController extends Controller
         }
        
     }
+
+    public function bronzePlanStripe(Request $request){
+        // dd($request->all());
+        
+        Session::pull("sendUpgradeConfirmEmail");
+
+        if(request()->sendUpgradeConfirmEmail)
+        {
+            Session::pull("sendUpgradeConfirmEmail");
+            Session::put("sendUpgradeConfirmEmail",request()->sendUpgradeConfirmEmail);
+
+            $sendUpgradeConfirmEmail = request()->sendUpgradeConfirmEmail;
+        }
+        else
+        {
+            Session::pull("sendUpgradeConfirmEmail");
+            Session::put("sendUpgradeConfirmEmail",0);
+        }
+
+        $benefits = array();
+
+        if(request()->lastPage)
+        {
+            Session::pull("lastPage");
+            
+            Session::put('lastPage',request()->lastPage);
+        }
+        
+        if(request()->planId)
+        {
+            $planDetails = SubscriptionPlan::where('id',request()->planId)->first();
+
+            $planBenefits = explode(",",$planDetails->benefits);
+
+            $benefits = array();
+
+            if(!empty($planBenefits))
+            {
+                foreach($planBenefits as $benefit)
+                {
+                    $benefitTitle = SubscriptionBenefit::where('id',$benefit)->first();
+
+                    if($benefitTitle)
+                    {
+                        $benefits[] = $benefitTitle->benefit;
+                    }
+                
+                }
+            }
+
+            User::where('id',Auth::id())->update([ 
+                // 'subscription_id'=>request()->planId,
+                'payment_status'=>0,
+                'payment_reminder'=>0,
+                'upgrade_plan'=>1,
+                'plan_upgraded_date'=>date("Y-m-d")
+            ]);
+        }
+        else
+        {
+            $planDetails = SubscriptionPlan::where('id',2)->first();
+        }
+        
+        $ifPaymentFail = 0; 
+        
+        // dd($planDetails->toArray());
+
+        return view('student_checkout',compact('planDetails','benefits','ifPaymentFail'));
+    }
+
+    public function checkoutPlanStripe($planId,Request $request){
+        // dd($planId,$request->promocode);
+        $planDetails = SubscriptionPlan::where('id',$planId)->first();
+        $user = Auth::user();
+
+        if(empty($planDetails)){
+            return redirect()->route('changePlanPage')->with('error', 'Please select a plan');
+        }
+        else{
+            try{
+                \Stripe\Stripe::setApiKey(config("services.stripe.secret"));
+                
+                // check user exsist
+                if(isset($user->customer_id) and !empty($user->customer_id)){
+                    $customer = \Stripe\Customer::retrieve($user->customer_id,[]);
+                }
+                else{
+                    // cus_Oqu8f33cerY1Ar
+                    // cus_OqyfQUMkMCNvgf
+                    $customer = \Stripe\Customer::create(array(
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'phone' => $user->phone,
+                    ));
+                }
+
+                if($request->promocode){
+                    $checkout_session = \Stripe\Checkout\Session::create([
+                        'payment_method_types' => ['card'],
+                        'line_items' => [[
+                            'price' => $planDetails->plan_id,
+                            'quantity' => 1,
+                        ]],
+                        'mode' => 'subscription',
+                        'success_url' => url('payment-success?plan='.$planDetails->id.'&session_id={CHECKOUT_SESSION_ID}'),
+                        'cancel_url' => url('payment-error?session_id={CHECKOUT_SESSION_ID}'),
+                        'customer' => $customer->id,
+                        // 'client_reference_id' => 'NtbZRdaw',
+                        'discounts' => [[
+                            'coupon' => $request->promocode,
+                          ]],
+                    ]);
+                }
+                else{
+                    $checkout_session = \Stripe\Checkout\Session::create([
+                        'payment_method_types' => ['card'],
+                        'line_items' => [[
+                            'price' => $planDetails->plan_id,
+                            'quantity' => 1,
+                        ]],
+                        'mode' => 'subscription',
+                        'success_url' => url('payment-success?id='.$planDetails->id.'&plan='.$planDetails->plan_id.'&session_id={CHECKOUT_SESSION_ID}'),
+                        'cancel_url' => url('payment-error?session_id={CHECKOUT_SESSION_ID}'),
+                        'customer' => $customer->id,
+                    ]);
+                }
+                
+
+                // dd($checkout_session->toArray());
+                return redirect()->to($checkout_session->url);
+            }
+            catch(\Exception $e){
+                return redirect()->back()->with('error', $e->getMessage());
+            }
+        }
+    }
+
+    public function successHandler(Request $request){
+        // dd($request->all());
+        \Stripe\Stripe::setApiKey(config("services.stripe.secret"));
+        $stripe = new \Stripe\StripeClient(config("services.stripe.secret"));
+        $user = Auth::user();
+        $priceId = SubscriptionPlan::where('id',$request->id)->first();
+        // dd($priceId);
+        try{
+            $session_id = $request->session_id;
+
+            // get session information
+            $checkout_session = \Stripe\Checkout\Session::retrieve($session_id,[]);
+    
+            // get user information
+            $customer = \Stripe\Customer::retrieve($user->customer_id,[]);
+
+            $subscription = $checkout_session;
+            if($checkout_session) {
+                $subsData = $checkout_session;
+
+                $latest_invoice = \Stripe\Invoice::retrieve($checkout_session->invoice,[]);
+                
+                if($latest_invoice){
+                    $payment_intent = \Stripe\PaymentIntent::retrieve($latest_invoice->payment_intent,[]);
+                    $charges = \Stripe\Charge::retrieve($latest_invoice->charge,[]);
+                    $subscriptionDetails = \Stripe\Subscription::retrieve($subscription->subscription,[]);
+                }
+                else{
+                    $latest_invoice = null;
+                }
+                
+                // dd($subsData,$subsData['status'], $checkout_session->id);
+                if(($subsData['status'] == 'complete'))
+                {   
+                    // Store Step One Data In Database
+                    $user->customer_id = $customer->id;
+                    $user->plan_id = $priceId->plan_id;
+                    $user->plan_subscription_id = $subsData['id'];
+                    $user->is_subscribe = 1;
+                    $user->subscription_id = $priceId->id;
+                    $user->plan_amount = $request->price;
+                    // $user->payment_status = 1;
+                    $user->plan_amount_currency = $request->currency;
+                    $user->plan_interval = 'month';
+                    $user->status = $subsData['status'];
+                    $user->save();
+
+                    // dd($request->id);
+                    // dd($subscriptionDetails->toArray(), $latest_invoice->toArray(), $payment_intent->toArray(), $charges->toArray(), $checkout_session->toArray());
+
+                    if(isset($charges) and !empty($charges))
+                    {
+                        // save subscription details
+                        $student = new StudentSubscription;
+                        $student->student_id = Auth::id();
+                        $student->subscription_id = $request->id;
+                        $student->price = $latest_invoice->amount_paid / 100;
+                        $student->receipt_url = $latest_invoice->invoice_pdf;
+                        $student->plan_subscription_id = $subscription->id;
+                        $student->dispute_flag = $charges->disputed;
+                        $student->dispute_id = $charges->dispute;
+                        $student->plan_subscription_id = $subscription->subscription;
+                        $student->subscription_end_date = date('Y-m-d', $subscription->current_period_end);
+                        $student->status = $charges->status;
+                        $student->save();
+
+                        // save card details 
+                        $payment = new PaymentDetails;
+                        $payment->student_id = Auth::id();
+                        $payment->card_number = $charges->payment_method_details->card->last4;
+                        $payment->brand = $charges->payment_method_details->card->brand;
+                        $payment->exp_month = $charges->payment_method_details->card->exp_month;
+                        $payment->exp_year = $charges->payment_method_details->card->exp_year;
+                        $payment->save();
+                    } 
+
+                    if($subsData['status'] == 'complete') {
+                        $user->payment_status = 1;
+                        $user->save();
+                        // return 'success';
+                    }
+
+                    // Check The Subscription Activation Is In Complete
+                    if($subsData['status'] == 'incomplete') {
+                        $latestInvoice = $subsData['latest_invoice'];
+                        if($latestInvoice['payment_intent']) {
+                            $paymentIntent = $latestInvoice['payment_intent'];
+                            if($paymentIntent['status'] == 'requires_action') {
+                                // return $paymentIntent['client_secret'];
+                                return redirect()->back()->with('client_secret', $paymentIntent['client_secret']);
+                            }
+                        }
+                    }
+                }
+
+                // dd($subsData,$subsData['status'], $checkout_session->id);
+                if(($subsData['status'] == 'incomplete'))
+                {  
+                    // dd($subsData,$subsData['status'], $checkout_session->id);
+                    $user->payment_failed_date = date("Y-m-d");
+                    $user->payment_failed_reminder = "0";
+                    $user->save();
+
+                    // $template = SendgridTemplate::where('id',28)->first();
+
+                    // $template_id = "d-".$template->template_id;   
+
+                    // $email = new \SendGrid\Mail\Mail();
+    
+                    // $email->setFrom("admin@free.martialartszen.com","MartialArtsZen");
+                    // $email->setSubject('Try MartialArtsZen.com using this referral');
+                    // $email->addTo($user->email);
+                    // $email->addContent("text/html","Join me and improve your skills in various disciplines");
+                    // $email->addDynamicTemplateDatas([
+                    //     "first_name"=>$user->firstname,
+                    //     "default"=>"Valued customer",
+                    //     "actionUrl"=>route('bronzePlanStripe2')
+                    //     ]);
+                    // $email->setTemplateId($template_id);
+                    
+                    // $sendgrid = new \SendGrid(env('MAIL_PASSWORD'));
+        
+                    // try{
+                    //     $response = $sendgrid->send($email);
+                    //     print $response->statusCode(). "\n";
+                    // }
+                    // catch(Exception $e)
+                    // {
+                    //     echo "Caught Exception:".$e->getMessage()."\n";
+                    // } 
+
+                    // Check The Subscription Activation Is In Complete
+                    if($subsData['status'] == 'incomplete') {
+                        $latestInvoice = $subsData['latest_invoice'];
+                        if($latestInvoice['payment_intent']) {
+                            $paymentIntent = $latestInvoice['payment_intent'];
+                            if($paymentIntent['status'] == 'requires_action') {
+                                // return $paymentIntent['client_secret'];
+                                return redirect()->back()->with('client_secret', $paymentIntent['client_secret']);
+                            }
+                        }
+                    }
+                }
+
+                // dd($subsData,$subsData['status'], $checkout_session->id);
+
+                if($request->sendUpgradeConfirmEmail == 0)
+                {
+                    // $template = SendgridTemplate::where('id',20)->first();
+
+                    // $template_id = "d-".$template->template_id;    
+
+                    // $email = new \SendGrid\Mail\Mail();
+                    
+                    // $email->setFrom("admin@free.martialartszen.com","MartialArtsZen");
+                    // $email->setSubject('Try MartialArtsZen.com using this referral');
+                    // $email->addTo($user->email);
+                    // $email->addContent("text/html","Join me and improve your skills in various disciplines");
+                    // $email->addDynamicTemplateDatas([
+                    //     "first_name"=>$user->firstname,
+                    //     "default"=>"Valued customer",
+                    //     "actionUrl"=>route('student_profile')
+                    //     ]);
+                    // $email->setTemplateId($template_id);
+                    
+                    // $sendgrid = new \SendGrid(env('MAIL_PASSWORD'));
+                    
+                    // $sendgrid->send($email);
+
+                }
+                if($request->sendUpgradeConfirmEmail == 1)
+                {
+                    // $template = SendgridTemplate::where('id',34)->first();
+
+                    // $template_id = "d-".$template->template_id;    
+
+                    // $email = new \SendGrid\Mail\Mail();
+                    
+                    // $email->setFrom("admin@free.martialartszen.com","MartialArtsZen");
+                    // $email->setSubject('Try MartialArtsZen.com using this referral');
+                    // $email->addTo($user->email);
+                    // $email->addContent("text/html","Join me and improve your skills in various disciplines");
+                    // $email->addDynamicTemplateDatas([
+                    //     "first_name"=>$user->firstname,
+                    //     "default"=>"Valued customer",
+                    //     "actionUrl"=>route('student_profile')
+                    //     ]);
+                    // $email->setTemplateId($template_id);
+                    
+                    // $sendgrid = new \SendGrid(env('MAIL_PASSWORD'));
+                    
+                    // $sendgrid->send($email);
+
+                }
+                // dd($priceId, $subsData,$subsData['status'], $checkout_session->id);
+                 // Update Payment Status Flag
+                $user->payment_status = 1;
+                $user->save();
+   
+                User::where('id', '=', Auth::id())->update(['accept_bronze_plan' => 1,'subscription_id'=>$priceId->id,'upgrade_plan'=>0]);
+                    
+                Session::flash('success1', 'Payment for '.$priceId->plan_name.' plan is successful. Welcome back!');
+                
+                if(Session::get('lastPage'))
+                {
+                    return redirect(Session::get('lastPage'));
+                }
+                else
+                {
+                    return Redirect::route('disciplines',['id'=>2]);
+                }
+                
+            }
+        }
+        catch(\Exception $e){
+            // dd($e->getMessage());
+            return redirect('changePlanPage')->with('error', $e->getMessage());
+        }
+    }
+    
+    public function errorHandler(Request $request){
+        // dd($request->all());
+
+        // try {
+
+        //     $email = new \SendGrid\Mail\Mail();
+        //     $email->setFrom("admin@free.martialartszen.com","MartialArtsZen");
+        //     $email->setSubject("Try MartialArtsZen.com using this referral");
+        //     $email->addTo("jtplartisan@gmail.com", "Recipient Name");
+        //     $email->addContent("text/plain", "Hello, this is the email body!");
+
+        //     $sendgrid = new SendGrid(config('services.sendgrid.api_key'));
+
+        //     $response = $sendgrid->send($email);
+        //     if ($response->statusCode() == 202) {
+        //         // Email sent successfully
+        //         return "Email sent successfully!";
+        //     } else {
+        //         // Handle the error
+        //         return "Email not sent. Status code: " . $response->statusCode();
+        //     }
+        // } catch (\Exception $e) {
+        //     // Handle exceptions
+        //     return "Email not sent. " . $e->getMessage();
+        // }
+        // $email = new \SendGrid\Mail\Mail();
+        // $email->setFrom("admin@free.martialartszen.com", "MartialArtsZen");
+        // $email->setSubject("Try MartialArtsZen.com using this referral");
+        // $email->addTo("jtplartisan@gmail.com", "Recipient Name");
+        // $email->addContent("text/plain", "Hello, this is the email body!");
+        
+        // $sendgrid = new SendGrid(config('services.sendgrid.api_key'));
+        
+        // $response = $sendgrid->send($email);
+        // if ($response->statusCode() == 202) {
+        //     // Email sent successfully
+        //     return "Email sent successfully!";
+        // } else {
+        //     // Handle the error
+        //     return "Email not sent. Status code: " . $response->statusCode();
+        // }
+        
+        // $data = ['message' => 'This is a test!'];
+
+        // Mail::to('sureshsavaliya@logisticinfotech.co.in')->send(new TestEmail($data));
+
+        // $userEmail = 'sureshsavaliya@logisticinfotech.co.in'; // Replace with the recipient's email address
+
+        // dd(env('SENDGRID_API_KEY'),config('services.sendgrid.api_key'));
+        // $data = [
+        //     'name' => 'John Doe',
+        //     'message' => 'This is a test email sent via SendGrid.'
+        // ];
+        // $data = Mail::to('jtplartisan@gmail.com')->send(new TestEmail($data));
+        // dd($data);
+        return redirect('changePlanPage')->with('error', 'You have cancelled the plan request');
+    }
+
 }

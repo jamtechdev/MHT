@@ -55,12 +55,12 @@ border-radius: 5px;
   display: none; /* Hidden by default */
   position: fixed; /* Stay in place */
   z-index: 1; /* Sit on top */
-  padding-top: 100px; /* Location of the box */
+ /* padding-top: 100px;  Location of the box */
   left: 0;
   top: 0;
   width: 100%;
   height: 100%;
-  overflow: auto; /* Enable scroll if needed */
+  /*overflow: auto;  Enable scroll if needed */
   background-color: rgb(0,0,0); /* Fallback color */
   background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
   z-index: 9999;
@@ -85,8 +85,12 @@ border-radius: 5px;
   padding: 20px;
   border: 1px solid #888;
   width:96%;
-  min-height:80%;
+  /* min-height:80%; */
+  height: 100vh;
+    min-height: 100vh;
+    max-height: 100vh;
   border-radius: 25px;
+  margin-top: 30px;
 }
 
 
@@ -181,6 +185,11 @@ button.btn-login.plan-button.comming-soon {
     color: #000;
     background-color: #e9ecf3 !important;
     border-color: #e8ebf2 !important;
+}
+.custom-form{
+    height: 100vh !important;
+    max-height: 100vh !important;
+    max-height: 100vh !important;
 }
 </style>
 <!-- Start New Registration Page -->
@@ -508,8 +517,8 @@ button.btn-login.plan-button.comming-soon {
                                                         <span class="close2">&times;</span>
                                                         <h3>Upgrade your plan</h3>
                                                         <hr class="mb-4 mt-3">
-                                                        <div class="contactForm">  
-                                                                <div style="overflow-x:auto">
+                                                        <div class="contactForm custom-form">  
+                                                                <div style="overflow:auto; height: 80vh;">
                                                                     <table class="table" id="my-table" style="overflow-x:auto; width:96%;">
                                                                         <thead>
                                                                             <tr>
@@ -559,19 +568,23 @@ button.btn-login.plan-button.comming-soon {
 
                                                                                             if($plan->validity_type == 1)
                                                                                             {
-                                                                                                $validity = $plan->validity." "."Day";
+                                                                                                // $validity = $plan->validity." "."Day";
+                                                                                                $validity = "Day";
                                                                                             }
                                                                                             elseif($plan->validity_type == 2)
                                                                                             {
-                                                                                                $validity = $plan->validity." "."Month";
+                                                                                                // $validity = $plan->validity." "."Month";
+                                                                                                $validity = "Month";
                                                                                             }
                                                                                             elseif($plan->validity_type == 3)
                                                                                             {
-                                                                                                $validity = $plan->validity." "."Year";
+                                                                                                // $validity = $plan->validity." "."Year";
+                                                                                                $validity = "Year";
                                                                                             }
                                                                                             else
                                                                                             {
-                                                                                                $validity = $plan->validity." ".'Lifetime';
+                                                                                                // $validity = $plan->validity." ".'Lifetime';
+                                                                                                $validity = 'Lifetime';
                                                                                             }
                                                                                         @endphp
                                                                                     

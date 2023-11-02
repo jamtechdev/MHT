@@ -343,11 +343,25 @@
     <input type="hidden" id="video_id" value="{{ request()->video_id }}">
    
     <div class="container">
-        <div class="embed-responsive embed-responsive-16by9">
-            <!-- <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/zpOULjyy-n8?rel=0" allowfullscreen></iframe> -->
+        @if($instructorLessionData['is_dacast_video'] == 1)
+        <script src="https://player.dacast.com/js/player.js?contentId={{ $instructorLessionData['dacast_video_asset_id'] }}"></script>
+            <div id="teaching-dacast-video-player"></div>
+            <script>
+                var CONTENT_ID = "{{ $instructorLessionData['dacast_video_asset_id'] }}";
+                var is_dacast_video = 1;
+            </script>
+        @else
+            <div class="embed-responsive embed-responsive-16by9">
+                <!-- <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/zpOULjyy-n8?rel=0" allowfullscreen></iframe> -->
+            
+                <div class="embed-responsive-item wistia_embed wistia_async_{{ $instructorVideoId }} resumable=true autoPlay=false qualityMin=1080 playButton=true endVideoBehavior=loop videoFoam=true muted=false controlsVisibleOnLoad=false fullscreenButton=false"></div>
+            </div>
+            <script>
+                var CONTENT_ID = "";
+                var is_dacast_video = 0;
+            </script>
+        @endif
         
-            <div class="embed-responsive-item wistia_embed wistia_async_{{ $instructorVideoId }} resumable=true autoPlay=false qualityMin=1080 playButton=true endVideoBehavior=loop videoFoam=true muted=false controlsVisibleOnLoad=false fullscreenButton=false"></div>
-        </div>
     </div>
 
 
@@ -363,26 +377,60 @@
                                 @if(count($relatedVideos))
                                     @foreach($relatedVideos as $related)
                                     <div class="swiper-slide">
-                                        <a href="#wistia_{{$related['video_id']}}" onclick="changeVideoName('{{ $related['title'] }}' , '{{ $related['video_id'] }}')">   
-                                            <div class="maz__swiper_slider_common_block">
-                                                <div class="maz__swiper_block_discipline-img">
-                                                    <img src="{{ str_replace('image_crop_resized=200x120','',$related['video_thumbnail']) }}"  alt="">
-                                                    <div class="Play-btn">
-                                                        <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                        {{-- @dd($related); --}}
+                                        @if($related['is_dacast_video'] == 1)
+                                            <a href="{{ url('playInstructorVideo?video_id='.$related['video_id']) }}">   
+                                                <div class="maz__swiper_slider_common_block">
+                                                    <div class="maz__swiper_block_discipline-img">
+                                                        <img src="{{ str_replace('image_crop_resized=200x120','',$related['video_thumbnail']) }}"  alt="">
+                                                        <div class="Play-btn">
+                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                        </div>
+                                                        
+                                                        @if($related['is_dacast_video'] == 1)
+                                                            <div class="badge-dark-video-time">{{ $related['video_duration'] }}</div>
+                                                        @else
+                                                            {{-- <div class="badge-dark-video-time">{{ Carbon\Carbon::parse($related['video_duration'])->format('i:s'); }}</div> --}}
+                                                            <div class="badge-dark-video-time">{{ Carbon\Carbon::parse((float)$related['video_duration'])->format('H:i:s') }}</div>
+                                                        @endif
                                                     </div>
+                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                        <h6>{{ $related['title'] }}</h6>
                                                     
-                                                    <div class="badge-dark-video-time">{{ Carbon\Carbon::parse($related['video_duration'])->format('i:s'); }}</div>
+                                                    </div>
+                                                    <!-- <div class="logo-background">
+                                                        <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
+                                                    </div> -->
+                                                    
                                                 </div>
-                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                    <h6>{{ $related['title'] }}</h6>
-                                                
+                                            </a>
+                                        @else 
+                                            <a href="#wistia_{{$related['video_id']}}" onclick="changeVideoName('{{ $related['title'] }}' , '{{ $related['video_id'] }}')">   
+                                                <div class="maz__swiper_slider_common_block">
+                                                    <div class="maz__swiper_block_discipline-img">
+                                                        <img src="{{ str_replace('image_crop_resized=200x120','',$related['video_thumbnail']) }}"  alt="">
+                                                        <div class="Play-btn">
+                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                        </div>
+                                                        
+                                                        @if($related['is_dacast_video'] == 1)
+                                                            <div class="badge-dark-video-time">{{ $related['video_duration'] }}</div>
+                                                        @else
+                                                            {{-- <div class="badge-dark-video-time">{{ Carbon\Carbon::parse($related['video_duration'])->format('i:s'); }}</div> --}}
+                                                            <div class="badge-dark-video-time">{{ Carbon\Carbon::parse((float)$related['video_duration'])->format('H:i:s') }}</div>
+                                                        @endif
+                                                    </div>
+                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                        <h6>{{ $related['title'] }}</h6>
+                                                    
+                                                    </div>
+                                                    <!-- <div class="logo-background">
+                                                        <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
+                                                    </div> -->
+                                                    
                                                 </div>
-                                                <!-- <div class="logo-background">
-                                                    <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                                </div> -->
-                                                
-                                            </div>
-                                        </a>    
+                                            </a>
+                                        @endif    
                                     </div>  
                                     @endforeach
                                 @endif
@@ -409,6 +457,14 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
+            
+            if(is_dacast_video == 1){
+                var myPlayer = dacast(CONTENT_ID, 'teaching-dacast-video-player', { 
+                    width: '100%', 
+                    height: 500,
+                    // player: "flow7"
+                });
+            }
             var video_id = $('#video_id').val();
 
             var user = <?php echo Auth::user(); ?>
@@ -508,11 +564,7 @@
                 });
             
             }});
-        });    
-    </script>
-    <script>
-        $("body").addClass('instructor-detail-body');
-
+        });
         function changeVideoName(title, video_id)
         {
             $("#video_name").empty();
@@ -520,7 +572,12 @@
 
             $("#video_id").empty();
             $("#video_id").text(video_id);
-        }
+        } 
+    </script>
+    <script>
+        $("body").addClass('instructor-detail-body');
+
+        
     </script>
     <script>
         var selected = $("#selectedTileId").val();

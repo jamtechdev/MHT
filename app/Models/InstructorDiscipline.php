@@ -28,4 +28,8 @@ class InstructorDiscipline extends Authenticatable
     // protected $hidden = [
     //     'password',
     // ];
+
+    public function displayorder(){
+        return $this->belongsTo(Instructor::class,'instructor_id','id');
+    }
 }

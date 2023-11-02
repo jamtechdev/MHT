@@ -34,7 +34,7 @@ class DisciplineController extends Controller
      */
     public function getDatatable(Discipline $discipline)
     {
-        $result = $discipline->all();
+        $result = $discipline->orderBy('id','DESC')->get();
         return DataTables::of($result)->addIndexColumn()->make(true);
     }
 
@@ -64,6 +64,20 @@ class DisciplineController extends Controller
         try {
             //upload image
             $input = $request->only(['title', 'description']);
+
+            if ($request->hasFile('discipline_img')) {
+                $image = $request->file('discipline_img');
+                $customName = 'discipline_img_' . time() . '.' . $image->getClientOriginalExtension(); // Define your custom name
+
+                $path = $image->move(public_path('assets/front/images/discipline'), $customName);
+                $input['photo'] = 'assets/front/images/discipline/' . $customName;
+                $input['is_stored_system'] = 1;
+            }
+            else{
+                $input['photo'] = 'assets/front/images/discipline/download.jpeg';
+                $input['is_stored_system'] = 1;
+            }
+
             //store discipline
             $status = $discipline->create($input);
             if ($status) {
@@ -83,14 +97,26 @@ class DisciplineController extends Controller
 
     public function update(Request $request, Discipline $discipline, $id)
     {
+        // dd($request->all());
         $this->validate($request, [
             'title' => ['required', 'string', 'max:100', 'unique:disciplines,title,' . $id . ',id,deleted_at,NULL'],
             'description' => ['required', 'string', 'max:500'],
         ]);
 
             $editDiscipline = $discipline->where('id', $id)->first();
+            
 
             $input = $request->only(['title', 'description']);
+
+            if ($request->hasFile('discipline_img')) {
+                $image = $request->file('discipline_img');
+                $customName = 'discipline_img_' . time() . '.' . $image->getClientOriginalExtension(); // Define your custom name
+
+                $path = $image->move(public_path('assets/front/images/discipline'), $customName);
+                $input['photo'] = 'assets/front/images/discipline/' . $customName;
+                $input['is_stored_system'] = 1;
+            }
+
             if ($editDiscipline) {
                 $isEdit = $editDiscipline->update($input);
                 if ($isEdit) {
@@ -161,5 +187,25 @@ class DisciplineController extends Controller
             'file_url' => $awsUrl
         ]);
 
+    }
+
+    public function disciplineDisplayOrder(){
+        $discipline = Discipline::orderBy('display_order','ASC')->get();
+        // dd($discipline->toArray());
+        return view('admin.discipline.display_order',compact('discipline'));
+    }
+
+    public function saveDisplayOrder(Request $request){
+        $order = 1;
+        $disciplines = explode(',',$request->order);
+        // dd($disciplines);
+        foreach($disciplines as $key => $discipline){
+            $d = Discipline::where('id',$discipline)->update(['display_order' => $order]);
+            if($d){
+                $order++;
+            }
+        }
+
+        return redirect()->back()->with('success', 'Display order saved successfully');
     }
 }

@@ -43,6 +43,15 @@ class Kernel extends HttpKernel
             // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \Fruitcake\Cors\HandleCors::class,
+        ],
+
+        'adminer' => [
+            \App\Http\Middleware\EncryptCookies::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            // TODO: you may create customized middleware to fit your needs
+            // example uses Laravel default authentication (default protection)
+            // \Illuminate\Auth\Middleware\Authenticate::class,
         ],
     ];
 
@@ -66,5 +75,7 @@ class Kernel extends HttpKernel
         'check.step.complete' => \App\Http\Middleware\CheckStepComplete::class,
         'check.login.paid' => \App\Http\Middleware\RedirectIfLoginAndPaid::class,
         'password' => \App\Http\Middleware\PasswordProtectionMiddleware::class,
+        'is-verified-to-access' => \App\Http\Middleware\IsVerifiedToAccess::class,
+        'adminer' => \App\Http\Middleware\Authenticate::class,
     ];
 }

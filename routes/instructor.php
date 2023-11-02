@@ -3,6 +3,7 @@
 
 use App\Http\Controllers\InstructorController;
 use Illuminate\Support\Facades\Route;
+use Fruitcake\Cors\HandleCors;
 
 // Instructor Routes
 Route::middleware('guest')->group(function () {
@@ -30,6 +31,9 @@ Route::middleware(['auth:instructor'])->group(function () {
     Route::get('instructor_changepassword/{id}', [InstructorController::class, 'getInstructorChangePassword'])->name('instructor_changepassword');
     Route::post('instructor_changepassword/{id}', [InstructorController::class, 'updateInstructorChangePassword'])->name('instructor_changepassword_post');
     Route::get('instructor_settings', [InstructorController::class, 'getInstructorSettings'])->name('instructor_settings');
+    Route::get('instructor_dacast', [InstructorController::class, 'dacastVideoAPI'])->name('dacastVideoAPI')->middleware([Fruitcake\Cors\HandleCors::class]);
+    Route::get('video-play/{id}', [InstructorController::class, 'dacastVideoPlay'])->name('dacast.video.play')->middleware([Fruitcake\Cors\HandleCors::class]);
+    Route::post('instructor-video-upload', [InstructorController::class, 'instructorVideoUpload'])->name('instructor.video.upload');
     Route::get('instructor_biography', [InstructorController::class, 'getInstructorBiographyVideo'])->name('instructor_biography');
     Route::get('instructor_add_biography', [InstructorController::class, 'getInstructorAddBiographyVideo'])->name('instructor_add_biography');
     Route::get('instructor-play-video/{id}', [InstructorController::class, 'instructorPlayVideo'])->name('instructorPlayVideo');

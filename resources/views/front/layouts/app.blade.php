@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
@@ -76,11 +77,64 @@
   cursor: pointer;
 }
 
+.main-loader-please-wait {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #000000c9;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 9999;
+        }
+
+        .main-loader-please-wait .loader-container {
+            text-align: center;
+            position: absolute;
+        }
+
+        .main-loader-please-wait .loader-container .loader {
+            border: 4px solid rgba(0, 0, 0, 0.3);
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        .main-loader-please-wait .loader-container .loading-message {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
 
 </style>
 </head>
 
 <body>
+
+    <!-- start loader -->
+    <div class="main-loader-please-wait" style="display:none">
+      <div class="loader-container">
+          <div class="loader"></div>
+          <p class="loading-message text-white">Please Wait ...</p>
+      </div>
+  </div>
+  <!-- end loader -->
+
     <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TTGP534"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>

@@ -26,8 +26,10 @@ use App\Models\InstructorVideos;
 use App\Models\StudentSubscription;
 use App\Models\InstructorClasses;
 use App\Models\ClassVideos;
+use App\Models\AllTabPassword;
 use Carbon\Carbon;
 use Session, Redirect, Auth;
+use Illuminate\Support\Facades\Hash;
 
 class HomeController extends Controller
 {
@@ -80,34 +82,72 @@ class HomeController extends Controller
         $currentDiscipline = $discipline->select('id','title', 'description', 'photo','desktop_sequence','main_coming_soon_image', 'video_coming_soon_image')->where('id',$discipline_id)->first();
         
         Session::put('isLandingPage', false);
-        $disciplineImagesData = $discipline->select('id','title', 'description', 'photo','desktop_sequence','main_coming_soon_image', 'video_coming_soon_image')->orderBy('desktop_sequence','ASC')->get();
-       
+        $disciplineImagesData = $discipline->select('id','title', 'description', 'photo','desktop_sequence','main_coming_soon_image', 'video_coming_soon_image', 'display_order')->orderBy('display_order','ASC')->get();
+        // dd($disciplineImagesData[0]);
+        if(count($disciplineImagesData) > 0){
+            $discipline_id = $disciplineImagesData[0]['id'];
+        }
         $levels = $instructorData = $instructorFreeData = $instructorRecommendedData = $instructorBronzeData = $instructorSilverData = $instructorGoldData = [];
-        $instructorDisciplines = InstructorDiscipline::where('discipline_id',$discipline_id)->get();
+        
+        $instructorDisciplines = InstructorVideos::where('discipline_id',((int)$discipline_id))->get(['instructor_id']);
+        
+        $instructor_ids = $instructorDisciplines->map(function($query){
+            return $query;
+        })->unique('instructor_id');
+        // dd($instructorDisciplines->toArray());
+        // $instructor_ids = array_map(function($item){
+            //     return $item['instructor_id'];
+            // },$instructorDisciplines->toArray());
+            
+            // dd(array_unique($instructor_ids) , $instructorDisciplines->toArray());
+            
+            $all_instructor = Instructor::where('is_approved', '=', 1)->whereIn('id',$instructor_ids)->orderBy('display_order','ASC')->get();
+            // dd($all_instructor, $instructorDisciplines, $discipline_id);
        
         $courseCategoryData = CourseCategory::select('id', 'name')->orderBy('sequence','ASC')->get();
 
-        if($instructorDisciplines)
-        {
-            foreach($instructorDisciplines as $i)
-            {
-                $instructorDBData = Instructor::where('is_approved', '=', 1)->where('id',$i->instructor_id)->first();
+        // if($instructorDisciplines)
+        // {
+        //     foreach($instructorDisciplines as $i)
+        //     {
+        //         $instructorDBData = Instructor::where('is_approved', '=', 1)->where('id',$i->instructor_id)->first();
               
-                if($instructorDBData)   
-                {
-                    // Get Instructor Course Category
-                    if($instructorDBData->id) {
+        //         if($instructorDBData)   
+        //         {
+        //             // Get Instructor Course Category
+        //             if($instructorDBData->id) {
                         
-                        // Check Instructor Have Course Lession
-                        if(InstructorVideos::where('instructor_id', '=', $instructorDBData->id)->where('discipline_id', $discipline_id)->count()) {
+        //                 // Check Instructor Have Course Lession
+        //                 if(InstructorVideos::where('instructor_id', '=', $instructorDBData->id)->where('discipline_id', $discipline_id)->count()) {
                           
-                            array_push($instructorData, $instructorDBData);
-                            // Get Instructor Videos
-                        }
-                    }
+        //                     array_push($instructorData, $instructorDBData);
+        //                     // Get Instructor Videos
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+
+
+        if(count($all_instructor) > 0){
+            foreach($all_instructor as $key => $instructor){
+                $instructor_query = InstructorVideos::where('instructor_id', '=', $instructor->id)->where('discipline_id', $discipline_id);
+                // if($instructor_query->count()) {
+                //     array_push($instructorData, $instructor);
+                // }
+                $instructor_ids_according_discipline = $instructor_query->get()->map(function($query){
+                    return $query;
+                })->unique('instructor_id');
+                if(isset($instructor_ids_according_discipline) and count($instructor_ids_according_discipline)){
+                    // instructorData
+                    array_push($instructorData, $instructor);
                 }
+                // dd($instructorData);
+                // dd($instructor_query->get()->toArray());
             }
         }
+
+        // dd($instructorData);
 
         if(count($courseCategoryData))
         {
@@ -134,7 +174,7 @@ class HomeController extends Controller
                                     'title'=>$video['title'],
                                     'video_level'=>$video['main_course_category_id'],
                                     'instructor_name'=>$instructorDetails->name,
-                                    'video_duration'=>$video['video_duration'],
+                                    'video_duration'=>number_format($video['video_duration'],2),
                                 );
     
                               
@@ -173,7 +213,7 @@ class HomeController extends Controller
                                     'title'=>$videos['title'],
                                     'video_level'=>$videos['main_course_category_id'],
                                     'instructor_name'=>$instructorDetails1->name,
-                                    'video_duration'=>$videos['video_duration'],
+                                    'video_duration'=>number_format($videos['video_duration'],2),
                                 );
                             }
                             else
@@ -232,7 +272,9 @@ class HomeController extends Controller
         // print_r($instructorRecommendedData );die;
        
         // echo "<pre>";
-        // print_r( $instructorData );die;  
+        // print_r( $instructorData );die;
+
+        // dd($instructorData);
     	return view('disciplines', compact('isDisputedUser','disciplineImagesData', 'instructorData', 'levels','instructorRecommendedData', 'instructorFreeData', 'instructorBronzeData', 'instructorSilverData', 'instructorGoldData','currentDiscipline'));
     }
 
@@ -551,22 +593,131 @@ class HomeController extends Controller
     * @return \Illuminate\View\View
     */
 
-    public function getSchoolAndInstructor(Request $request) {
-        Session::put('isLandingPage', false);
-        //$instructorDropdownData = Instructor::select('id', 'name')->where('is_approved', '=', 1)->get();
-        $discplineDropdownData = Discipline::select('id', 'title', 'main_coming_soon_image')->orderBy('mobile_sequence','ASC')->get();
+    // public function getSchoolAndInstructor(Request $request) {
+    //     Session::put('isLandingPage', false);
+    //     //$instructorDropdownData = Instructor::select('id', 'name')->where('is_approved', '=', 1)->get();
+    //     $discplineDropdownData = Discipline::select('id', 'title', 'main_coming_soon_image')->orderBy('mobile_sequence','ASC')->get();
         
+    //     $disciplineWiseInstructors = array();
+
+    //     $selIns = 'All';
+    //     if(isset($request->selIns) && $request->selIns != 'All') {
+    //         $selIns = $request->selIns;
+            
+    //         $instructorData = array();
+    //         //InstructorDiscipline
+    //         //$instructorData = Instructor::where('id', '=', $request->selIns)->paginate(9);
+    //         $instructors = InstructorDiscipline::where('discipline_id', '=', $request->selIns)->get();
+            
+    //         if(!empty($instructors))
+    //         {
+    //             foreach($instructors as $i)
+    //             { 
+    //                 if($i['instructor_id'])
+    //                 {
+    //                     $instructorDetails = Instructor::where('is_approved', '=', 1)->where('id',$i->instructor_id)->first();
+
+    //                     if($instructorDetails)
+    //                     {
+    //                         $instructorData[] = array(
+    //                             'id'=>$instructorDetails->id,
+    //                             'name'=>$instructorDetails->name,
+    //                             'school_name'=>$instructorDetails->school_name,
+    //                             'profile'=>$instructorDetails->photo
+    
+    //                         );
+    //                     }
+    //                 }
+                   
+                    
+    //                 // $instructorData[] = array(
+    //                 //     'id'=>$instructorList['id'],
+    //                 //     'name'=>$instructorList['name'],
+    //                 //     'photo'=>$instructorList['photo']
+    //                 // );
+    //             }
+    //         }
+    //         else
+    //         {
+    //             $instructorData[] = array();
+    //         }
+
+    //         $discipline = Discipline::select('id', 'title', 'main_coming_soon_image')->where('id', $selIns)->first();
+
+    //         $disciplineWiseInstructors[] = array(
+    //             'discipline_name' => $discipline->title,
+    //             'video_coming_soon_image' => $discipline->main_coming_soon_image,
+    //             'instructorData' => $instructorData
+    //         );
+
+    //     } 
+    //     else 
+    //     {
+    //         if(count($discplineDropdownData) > 0)
+    //         {
+    //             foreach($discplineDropdownData as $discipline)
+    //             {
+    //                 dd($discipline);
+    //                 $instructorData = array(); 
+
+    //                 $instructors = InstructorDiscipline::where('discipline_id',$discipline->id)->get();
+
+    //                 if($instructors)
+    //                 {
+    //                     foreach($instructors as $instructor)
+    //                     {
+    //                         $instructorDetails = Instructor::where('is_approved', '=', 1)->where('id',$instructor->instructor_id)->first();
+
+    //                         if($instructorDetails)
+    //                         {
+    //                             $instructorData[] = array(
+    //                                 'id'=>$instructorDetails->id,
+    //                                 'name'=>$instructorDetails->name,
+    //                                 'school_name'=>$instructorDetails->school_name,
+    //                                 'profile'=>$instructorDetails->photo
+    
+    //                             );
+    //                         }
+    //                     }
+                       
+    //                 }
+    //                 else
+    //                 {
+    //                     $instructorData[] = array();
+    //                 }
+
+    //                 $disciplineWiseInstructors[] = array(
+    //                   'discipline_name' => $discipline->title,
+    //                   'video_coming_soon_image' => $discipline->main_coming_soon_image,
+    //                   'instructorData' => $instructorData
+    //                 );
+    //             }
+    //         }
+    //         // $instructorData = Instructor::where('is_approved', '=', 1)->paginate(9);
+    //     }
+
+    //     $myCollectionObj = collect($disciplineWiseInstructors);
+  
+    //     $disciplineWiseInstructors = $this->paginate($myCollectionObj);
+        
+    //     // echo "<pre>";
+    //     // print_r($disciplineWiseInstructors);die;
+    //     return view("schools-and-instructors", compact('disciplineWiseInstructors','discplineDropdownData', 'instructorData', 'selIns'));
+    // }
+
+
+    public function getSchoolAndInstructor(Request $request)
+    {
+        Session::put('isLandingPage', false);
+        $discplineDropdownData = Discipline::select('id', 'title', 'main_coming_soon_image')->orderBy('mobile_sequence','ASC')->get();
+
         $disciplineWiseInstructors = array();
 
         $selIns = 'All';
         if(isset($request->selIns) && $request->selIns != 'All') {
             $selIns = $request->selIns;
-            
             $instructorData = array();
-            //InstructorDiscipline
-            //$instructorData = Instructor::where('id', '=', $request->selIns)->paginate(9);
             $instructors = InstructorDiscipline::where('discipline_id', '=', $request->selIns)->get();
-            
             if(!empty($instructors))
             {
                 foreach($instructors as $i)
@@ -582,42 +733,38 @@ class HomeController extends Controller
                                 'name'=>$instructorDetails->name,
                                 'school_name'=>$instructorDetails->school_name,
                                 'profile'=>$instructorDetails->photo
-    
+
                             );
                         }
                     }
-                   
-                    
-                    // $instructorData[] = array(
-                    //     'id'=>$instructorList['id'],
-                    //     'name'=>$instructorList['name'],
-                    //     'photo'=>$instructorList['photo']
-                    // );
                 }
             }
             else
             {
                 $instructorData[] = array();
             }
-
             $discipline = Discipline::select('id', 'title', 'main_coming_soon_image')->where('id', $selIns)->first();
-
             $disciplineWiseInstructors[] = array(
                 'discipline_name' => $discipline->title,
                 'video_coming_soon_image' => $discipline->main_coming_soon_image,
                 'instructorData' => $instructorData
             );
-
         } 
         else 
         {
-            if($discplineDropdownData)
+            if(count($discplineDropdownData) > 0)
             {
                 foreach($discplineDropdownData as $discipline)
                 {
                     $instructorData = array(); 
-
-                    $instructors = InstructorDiscipline::where('discipline_id',$discipline->id)->get();
+                    
+                    $instructors = InstructorDiscipline::with(['displayorder'])->where('discipline_id',$discipline->id)->get();
+                    $instructors = $instructors->sortBy(function($query){
+                        if(isset($query->displayorder)){
+                            return $query->displayorder->display_order;
+                        }
+                    });
+                    // dd($instructors->toArray());
 
                     if($instructors)
                     {
@@ -632,11 +779,11 @@ class HomeController extends Controller
                                     'name'=>$instructorDetails->name,
                                     'school_name'=>$instructorDetails->school_name,
                                     'profile'=>$instructorDetails->photo
-    
+
                                 );
                             }
                         }
-                       
+
                     }
                     else
                     {
@@ -644,21 +791,20 @@ class HomeController extends Controller
                     }
 
                     $disciplineWiseInstructors[] = array(
-                      'discipline_name' => $discipline->title,
-                      'video_coming_soon_image' => $discipline->main_coming_soon_image,
-                      'instructorData' => $instructorData
+                        'discipline_name' => $discipline->title,
+                        'video_coming_soon_image' => $discipline->main_coming_soon_image,
+                        'instructorData' => $instructorData
                     );
                 }
             }
-            // $instructorData = Instructor::where('is_approved', '=', 1)->paginate(9);
         }
 
         $myCollectionObj = collect($disciplineWiseInstructors);
-  
+
         $disciplineWiseInstructors = $this->paginate($myCollectionObj);
         
-        // echo "<pre>";
-        // print_r($disciplineWiseInstructors);die;
+        // dd($disciplineWiseInstructors,$myCollectionObj);
+
         return view("schools-and-instructors", compact('disciplineWiseInstructors','discplineDropdownData', 'instructorData', 'selIns'));
     }
 
@@ -794,6 +940,8 @@ class HomeController extends Controller
 
         $instructorDiscipline = InstructorDiscipline::where('instructor_id',$instructorId)->first();
 
+        // dd($instructorDiscipline);
+
         $instructorDisciplineDetails = "";
 
         if($instructorDiscipline)
@@ -818,7 +966,7 @@ class HomeController extends Controller
         $instructorDemonstrationData = array();
         // Get Biography Video Section
         $instructorBiographyData = InstructorBiographyVideo::where('instructor_id', '=', $instructorId)->where('status',1)->get();
-       
+        // dd($instructorDetailData, $instructorBiographyData, $instructorId);
         if(count($instructorBiographyData))
         {
             $instructorDemonstrationData[] = array(
@@ -826,7 +974,9 @@ class HomeController extends Controller
                 'photo'=>$instructorBiographyData[0]['video_thumbnail'],
                 'name'=>$instructorBiographyData[0]['title'],
                 'video_id'=>$instructorBiographyData[0]['video_id'],
-                'video_duration'=>$instructorBiographyData[0]['video_duration']
+                'video_duration'=>$instructorBiographyData[0]['video_duration'],
+                'is_dacast_video'=>$instructorBiographyData[0]['is_dacast_video'],
+                'dacast_video_asset_id'=>$instructorBiographyData[0]['dacast_video_asset_id']
             );
         }
         
@@ -841,13 +991,16 @@ class HomeController extends Controller
                     'photo'=>$dv['video_thumbnail'],
                     'name'=>$dv['title'],
                     'video_id'=>$dv['video_id'],
-                    'video_duration'=>$dv['video_duration']
+                    'video_duration'=>$dv['video_duration'],
+                    // 'is_dacast_video'=>$dv[0]['is_dacast_video'],
+                    // 'dacast_video_asset_id'=>$dv[0]['dacast_video_asset_id']
                 );
 
             }
         }
         
         $courseCategoryData = CourseCategory::select('id', 'name','description')->orderBy('sequence','ASC')->get();
+        // dd($courseCategoryData);
 
         if(count($courseCategoryData))
         {
@@ -856,22 +1009,30 @@ class HomeController extends Controller
                 $videoData = array();
                 $classData = array();
 
+                // dd($ccData);
                 if($instructorId)
                 {
                     if($ccData->id != 5)
                     {
                         $videos = InstructorVideos::where('instructor_id', '=', $instructorId)->where('main_course_category_id', '=', $ccData->id)->get();
-
+                        // dd($videos);
                         if(count($videos))
                         {
                             foreach($videos as $v)
                             {
+                                if($v['is_dacast_video'] == 1){
+                                    $video_ducration = $v['video_duration'];
+                                }
+                                else{
+                                    $video_ducration = Carbon::parse((float)$v['video_duration'])->format('H:i:s');
+                                }
                                 $videoData[] = array(
                                     'video_id'=>$v['video_id'],
                                     'video_thumbnail'=>$v['video_thumbnail'],
                                     'title'=>$v['title'],
                                     'video_level'=>$v['main_course_category_id'],
-                                    'video_duration'=>$v['video_duration']
+                                    // 'video_duration'=>$v['video_duration']
+                                    'video_duration'=>$video_ducration
                                 );
                             }
                         }
@@ -884,19 +1045,25 @@ class HomeController extends Controller
                         {
                             foreach($instructorRecommendedVideoData as $v1)
                             {
+                                if($v1['is_dacast_video'] == 1){
+                                    $video_ducration = $v1['video_duration'];
+                                }
+                                else{
+                                    $video_ducration = Carbon::parse((float)$v1['video_duration'])->format('H:i:s');
+                                }
                                 $videoData[] = array(
                                     'video_id'=>$v1['video_id'],
                                     'video_thumbnail'=>$v1['video_thumbnail'],
                                     'title'=>$v1['title'],
                                     'video_level'=>$v1['main_course_category_id'],
-                                    'video_duration'=>$v1['video_duration']
+                                    'video_duration'=>$video_ducration
                                 );
                             }
                         }
                     }
 
                     $getBronzeClasses = InstructorClasses::where('main_category_id', $ccData->id)->where('instructor_id',$instructorId)->where('publish', 1)->get();
-
+                    // dd($getBronzeClasses);
                     if(!empty($getBronzeClasses))
                     {
                         foreach($getBronzeClasses as $bc)
@@ -939,6 +1106,8 @@ class HomeController extends Controller
 
 
         // $instructorRecommendedVideoData = InstructorVideos::where('instructor_id', '=', $instructorId)->where('status', '=', 1)->where('recommended_flag','=',1)->get();
+        
+        // dd($isDisputedUser,$instructorDetailData, $instructorDemonstrationData, $instructorBiographyData, $levels,$instructorFreeVideoData, $instructorRecommendedVideoData, $instructorBronzeVideoData, $instructorSilverVideoData, $instructorGoldVideoData,$instructorBronzeTeachingVideosData, $instructorDisciplineDetails);
 
         return view("instructor-detail", compact('isDisputedUser','instructorDetailData', 'instructorDemonstrationData', 'instructorBiographyData', 'levels','instructorFreeVideoData', 'instructorRecommendedVideoData', 'instructorBronzeVideoData', 'instructorSilverVideoData', 'instructorGoldVideoData','instructorBronzeTeachingVideosData', 'instructorDisciplineDetails'));
     }
@@ -1316,5 +1485,30 @@ class HomeController extends Controller
         $disciplineDetails = Discipline::where('id',$classData->discipline_id)->first();
 
         return view("class", compact('instructorClassVideos', 'firstVedio', 'classData', 'disciplineDetails'));
+    }
+
+    public function showVerifiedLoginForm(Request $request){
+        return view('showVerifiedLoginForm');
+    }
+
+    public function postVerifiedLoginForm(Request $request){
+        $tab_password = AllTabPassword::first();
+        if($request->username == $tab_password->username and Hash::check($request->password, $tab_password->password)){
+            Session::put('pageVerification','true');
+            // Session::put('intended_url',url()->previous());
+            if($request->intended_url == url('please-login-first')){
+                Session::flash('intended_url',url('/'));
+                return redirect(url('/'));
+            }
+            else{
+                Session::flash('intended_url',$request->intended_url);
+                return redirect($request->intended_url);
+            }
+            // session()->flash('intended_url', url()->previous());
+        }
+        else{
+            Session::put('pageVerification','false');
+            return redirect()->route('show.login.form')->with('error','Credentails not match');
+        }
     }
 }

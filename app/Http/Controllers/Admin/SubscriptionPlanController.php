@@ -349,10 +349,23 @@ class SubscriptionPlanController extends Controller
         $response = [];
 
         $data = $subscriptionplan->where('id', $id)->first();
+        // dd($data->toArray());
         if ($data) {
-            $data->delete();
-            $response['message'] = "Subscription plan has been deleted successfully.";
-            $response['status'] = true;
+            try{
+                $stripe = new \Stripe\StripeClient(config("services.stripe.secret"));
+                $plan = $stripe->plans->delete($data->plan_id, []);
+                $data->delete();
+                $response['message'] = "Subscription plan has been deleted successfully.";
+                $response['status'] = true;
+                // dd($plan->toArray());
+            }
+            catch(\Exception $e){
+                // dd($data->toArray(), $e->getMessage());
+                $data->delete();
+                $response['message'] = "Subscription plan has been deleted successfully.";
+                $response['status'] = true;
+                return response()->json($response);
+            }
         } else {
             $response['message'] = "Course Category does not found!";
             $response['status'] = false;

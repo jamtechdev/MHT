@@ -435,16 +435,20 @@
                 </select>
             </div>
         </div>
-    </div>    
-    <!-- Dynamic Video Section-->    
+    </div>
+
+    <!-- Dynamic Video Section-->
+    @php
+        $class_id = 0;
+    @endphp
     @if(count($disciplineWiseInstructors))
-        @foreach($disciplineWiseInstructors as $discipline)
+        @foreach($disciplineWiseInstructors as $key => $discipline)
             <div class="categories_swiper__slider-block">
                 <div class="container">
                     <div class="swiper__main_blocks">
                         <h2 class="mb-3 mb-md-0">{{ $discipline['discipline_name'] }}</h2>
                         <hr>
-                        <div class="swiper bronze_videos mt-4">
+                        <div class="swiper bronze_videos{{ $class_id }} mt-4">
                             <div class="swiper-wrapper bronze_videos1">
                             @auth
                                 @if(Auth::user()->subscription_id != 1 && Auth::user()->payment_status == 1 && $isDisputedUser != "Disputed")
@@ -907,17 +911,26 @@
                             @endauth
                             </div>
                         </div>
-                        <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
+                        {{-- <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
                     
                         <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
                                         
                         </div>
                         <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
                             <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                        </div> --}}
+                        <div class="category-swiper-button-next-{{$class_id}} swiper-button-next maz__swiper_btn-next">
+                            <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                        </div>
+                        <div class="category-swiper-button-prev-{{$class_id}} swiper-button-prev maz__swiper_btn-prev">
+                            <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
                         </div>
                     </div>
                 </div>
-            </div>                       
+            </div>
+            @php
+                $class_id++;
+            @endphp
         @endforeach
     @endif                  
     <!-- End Dynamic Video Section-->                               
@@ -1313,5 +1326,37 @@
 
         }
 
+        total_levels = parseInt("{{ count($disciplineWiseInstructors) }}");
+        for(j=0;j< total_levels; j++){
+            var swiper2 = new Swiper(".swiper.bronze_videos"+j, {
+                slidesPerView: 1,
+                spaceBetween: 20,
+                cssMode: true,
+                navigation: {
+                    nextEl: ".category-swiper-button-next-"+j,
+                    prevEl: ".category-swiper-button-prev-"+j,
+                },
+                lazy: {
+                    loadPrevNext: true,
+                },
+                breakpoints: {
+                    0: {
+                        slidesPerView: 1,
+                        spaceBetween: 20,
+                    },
+                    768: {
+                        slidesPerView: 2,
+                        spaceBetween: 24,
+                    },
+                    1024: {
+                        slidesPerView: 3,
+                        spaceBetween: 24,
+                    },
+                    1440: {
+                        slidesPerView: 4,
+                    },
+                },
+            });
+        }
     </script>
 @endpush

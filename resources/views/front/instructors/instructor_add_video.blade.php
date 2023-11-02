@@ -61,7 +61,7 @@
                     <div class="card-body maz__profile-content">
                         <div class="row">
                             <div class="col-lg-6">
-                                <form method="POST" action="{{ route('instructor_post_video') }}" class="maz__register-form" id="addBiographyVideoForm" enctype="multipart/form-data">
+                                <form method="POST" action="{{ route('instructor_post_video') }}" class="maz__register-form" id="addTeachingVideoForm" enctype="multipart/form-data">
                                     @csrf
                                     <input type="hidden" id="video_id" name="video_id">
                                     <input type="hidden" id="status" name="status" value="1">
@@ -124,10 +124,17 @@
                                             @enderror
                                         </div>
                                       
-                                        <div class="mb-3">
+                                        {{-- <div class="mb-3">
                                             <label for="biography_video_path" class="col-form-label text-md-end">{{ __('Upload Teaching Video') }} <span class="text-primary">*</span></label>
                                             <div id="wistia_uploader" style="height:360px;width:640px;"></div>
+                                        </div> --}}
+                                        
+                                        <div class="mb-3">
+                                            <label for="biography_video_path" class="col-form-label text-md-end">Upload Teaching Video <span class="text-primary">*</span></label>
+                                            
+                                            <input type="file" accept="video/mp4" name="teach_video_file" class="form-control">
                                         </div>
+
                                         <div class="d-inline">
                                             <button type="submit" class="btn btn-secondary dashboard_btn_lg text-uppercase me-3" style="margin-bottom: 0.2rem !important;">Save Video</button>
                                             <a class="btn btn btn-primary text-uppercase dashboard_btn_danger dashboard_btn_lg" style="margin-bottom: 0.2rem !important;" href="{{ route('instructor_videos') }}" style="min-width: 129px !important;">Cancel</a>
@@ -147,7 +154,7 @@
 <script src="//fast.wistia.com/assets/external/api.js" async></script>
 <script>
     $(document).ready(function() {
-        $("#addBiographyVideoForm").validate({
+        $("#addTeachingVideoForm").validate({
             rules: {
                 title: {
                     required: true,
@@ -160,6 +167,9 @@
                     required: true,
                 },
                 discipline_id: {
+                    required: true,
+                },
+                teach_video_file: {
                     required: true,
                 }
             },
@@ -176,7 +186,15 @@
                 },
                 discipline_id: {
                     required: "Discipline is required",
+                },
+                teach_video_file: {
+                    required: "Teaching video is required",
                 }
+            },
+            submitHandler: function(form) {
+                // This function will be called when the form is valid
+                $('div.main-loader-please-wait').show();
+                form.submit(); // This will submit the form
             }
         });
 
@@ -206,28 +224,32 @@
             }
         });
 
+        // $('form#addTeachingVideoForm').submit(function(){
+        //     $('div.main-loader-please-wait').show();
+        // });
+
         // Wistia Code Section
-        window._wapiq = window._wapiq || [];
-        _wapiq.push(function(W) {
+        // window._wapiq = window._wapiq || [];
+        // _wapiq.push(function(W) {
           
-            window.wistiaUploader = new W.Uploader({
-                accessToken: "{{config("services.wistia.token")}}",
-                dropIn: "wistia_uploader",
-                projectId: '{{$projectId}}',
-                beforeUpload: function() {
-                    wistiaUploader.setFileName($("#title").val());
-                    wistiaUploader.setFileDescription($("#description").val());
-                }
-            });
-            wistiaUploader.bind('uploadsuccess', function(file, media) {
-                if(media) {
-                    $("#video_id").val(media.id);
-                    $("#video_name").val(media.name);
-                    $("#video_duration").val(media.duration);
-                    $("#video_thumbnail").val(media.thumbnail.url);
-                }
-            });
-        });
+        //     window.wistiaUploader = new W.Uploader({
+        //         accessToken: "{{config("services.wistia.token")}}",
+        //         dropIn: "wistia_uploader",
+        //         projectId: '{{$projectId}}',
+        //         beforeUpload: function() {
+        //             wistiaUploader.setFileName($("#title").val());
+        //             wistiaUploader.setFileDescription($("#description").val());
+        //         }
+        //     });
+        //     wistiaUploader.bind('uploadsuccess', function(file, media) {
+        //         if(media) {
+        //             $("#video_id").val(media.id);
+        //             $("#video_name").val(media.name);
+        //             $("#video_duration").val(media.duration);
+        //             $("#video_thumbnail").val(media.thumbnail.url);
+        //         }
+        //     });
+        // });
     });
 </script>
 @endpush

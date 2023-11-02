@@ -57,12 +57,12 @@ class ContactController extends Controller
             'name' => 'required|max:255',
             'message' => 'required|max:255',
             'question_file'=>'max:255',
-            'g-recaptcha-response' => 'required|recaptchav3:contactus,0.5',
+            // 'g-recaptcha-response' => 'required|recaptchav3:contactus,0.5',
         ],[
             'question_regarding.required' => 'The query field is required.',
             'name.required' => 'The subject field is required.',
             'message.required' => 'The description field is required.',
-            'g-recaptcha-response.recaptchav3' => 'Invalid captcha, Please try again.'
+            // 'g-recaptcha-response.recaptchav3' => 'Invalid captcha, Please try again.'
         ]);
 
         $input = $request->only(['name', 'email', 'question_regarding', 'message']);

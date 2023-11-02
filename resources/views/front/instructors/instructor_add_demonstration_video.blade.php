@@ -63,11 +63,11 @@
                             <div class="col-lg-6">
                                 <form method="POST" action="{{ route('instructor_post_demonstration') }}" class="maz__register-form" id="addBiographyVideoForm" enctype="multipart/form-data">
                                     @csrf
-                                    <input type="hidden" id="video_id" name="video_id">
+                                    {{-- <input type="hidden" id="video_id" name="video_id">
                                     <input type="hidden" id="status" name="status" value="1">
                                     <input type="hidden" id="video_name" name="video_name">
                                     <input type="hidden" id="video_duration" name="video_duration">
-                                    <input type="hidden" id="video_thumbnail" name="video_thumbnail">
+                                    <input type="hidden" id="video_thumbnail" name="video_thumbnail"> --}}
                                     <div class="maz__question-add-wrapper">
                                         <div class="mb-3">
                                             <label for="title" class="col-form-label text-md-end">{{ __('Title') }} <span class="text-primary">*</span></label>
@@ -89,11 +89,12 @@
                                         </div>--}}
                                         <div class="mb-3">
                                             <label for="biography_video_path" class="col-form-label text-md-end">{{ __('Upload Demonstration Video') }} <span class="text-primary">*</span></label>
-                                            <div id="wistia_uploader" style="height:360px;width:640px;"></div>
+                                            <input type="file" accept="video/mp4" name="demo_video_file" class="form-control">
+                                            {{-- <div id="wistia_uploader" style="height:360px;width:640px;"></div> --}}
                                         </div>
                                         <div class="d-inline">
                                             <button type="submit" class="btn btn-secondary dashboard_btn_lg text-uppercase me-3" style="margin-bottom: 0.2rem !important;">Save Demonstration Video</button>
-                                            <a class="btn btn btn-primary text-uppercase dashboard_btn_danger dashboard_btn_lg" style="margin-bottom: 0.2rem !important;" href="{{ route('instructor_biography') }}" style="min-width: 129px !important;">Cancel</a>
+                                            <a class="btn btn btn-primary text-uppercase dashboard_btn_danger dashboard_btn_lg" style="margin-bottom: 0.2rem !important;" href="{{ route('instructor_demonstration') }}" style="min-width: 129px !important;">Cancel</a>
                                         </div>
                                     </div>
                                 </form>
@@ -116,41 +117,80 @@
                     required: true,
                     maxlength: 50
                 },
-                // description: {
-                //     required: true,
-                //     maxlength: 500
-                // }
+                demo_video_file: {
+                    required: true,
+                }
             },
             messages: {
                 title: {
                     required: "Title is required",
                     maxlength: "Title cannot be more than 50 characters"
                 },
-                // description: {
-                //     required: "Description is required",
-                //     maxlength: "Description cannot be more than 500 characters"
-                // }
+                demo_video_file: {
+                    required: "Demonstration Video is required",
+                }
             }
         });
 
         // Wistia Code Section
-        window._wapiq = window._wapiq || [];
-        _wapiq.push(function(W) {
-            window.wistiaUploader = new W.Uploader({
-                accessToken: "{{config("services.wistia.token")}}",
-                dropIn: "wistia_uploader",
-                projectId: '{{$projectId}}',
-                beforeUpload: function() {
-                    wistiaUploader.setFileName($("#title").val());
-                    wistiaUploader.setFileDescription($("#description").val());
-                }
-            });
-            wistiaUploader.bind('uploadsuccess', function(file, media) {
-                if(media) {
-                    $("#video_id").val(media.id);
-                    $("#video_name").val(media.name);
-                    $("#video_duration").val(media.duration);
-                    $("#video_thumbnail").val(media.thumbnail.url);
+        // window._wapiq = window._wapiq || [];
+        // _wapiq.push(function(W) {
+        //     window.wistiaUploader = new W.Uploader({
+        //         accessToken: "{{config("services.wistia.token")}}",
+        //         dropIn: "wistia_uploader",
+        //         projectId: '{{@$projectId}}',
+        //         beforeUpload: function() {
+        //             wistiaUploader.setFileName($("#title").val());
+        //             wistiaUploader.setFileDescription($("#description").val());
+        //         }
+        //     });
+        //     wistiaUploader.bind('uploadsuccess', function(file, media) {
+        //         if(media) {
+        //             $("#video_id").val(media.id);
+        //             $("#video_name").val(media.name);
+        //             $("#video_duration").val(media.duration);
+        //             $("#video_thumbnail").val(media.thumbnail.url);
+        //         }
+        //     });
+        // });
+
+        $('#addBiographyVideoForm').submit(function(e) {
+            e.preventDefault();
+
+            var formData = new FormData($(this)[0]);
+
+            $.ajax({
+                url: $(this).attr('action'),
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                beforeSend: function(){
+                    $('div.main-loader-please-wait').show();
+                },
+                complete: function(){
+                    $('div.main-loader-please-wait').hide();
+                },
+                success: function(response) {
+                    $('div.main-loader-please-wait').hide();
+                    if(response.status == 'success'){
+                        // $('div.main-loader-please-wait').hide();
+                        toastr.success(response.message,response.status);
+                        $('#upload-status').html('<div class="alert alert-success">'+ response.message +'</div>');
+                        $('#upload-status').html(`<div class="alert alert-dismissible alert-success fade my-2 rounded show" role="alert"><strong>Success! </strong> `+ response.message +`<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`);
+                        $("form#addBiographyVideoForm")[0].reset();
+                        setTimeout(function(){
+                            window.location.href = "{{ route('instructor_demonstration') }}";
+                        },2000)
+                    }
+                    else{
+                        toastr.error(response.message,response.status);
+                        $('#upload-status').html('<div class="alert alert-error">'+ response.message +'</div>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    // Handle errors
+                    $('#upload-status').html('Error: ' + xhr.responseText);
                 }
             });
         });

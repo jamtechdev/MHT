@@ -313,6 +313,8 @@ tfoot {
                 hiddenInput.setAttribute('value', token.id);
                 form.appendChild(hiddenInput);
                 // Submit the form
+                console.log($(form).serialize());
+                // return false;
                 form.submit();
             }
         });

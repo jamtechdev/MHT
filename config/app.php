@@ -175,6 +175,7 @@ return [
         * Package ExcelServiceProvider
         */
         Maatwebsite\Excel\ExcelServiceProvider::class,
+        Onecentlin\Adminer\ServiceProvider::class,
     ],
 
     /*

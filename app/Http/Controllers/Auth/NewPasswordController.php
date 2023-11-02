@@ -43,27 +43,28 @@ class NewPasswordController extends Controller
         ]);
         
     
+        // $check_user = resetPassword::where('email',$request->email)->first();
         $check_user = resetPassword::where('email',$request->email)->first();
-
+        // dd($check_user);
         if($check_user)
         {
             $check_interval = FALSE;
             $current_time = date('H:i:s');
-
             if($check_user->updated_at != NULL)
             {
                 $time_difference = date('H:i:s',strtotime($check_user->updated_at));
+                // dd($current_time, $time_difference, $check_user->updated_at);
 
                 // Creating DateTime objects
                 $dateTimeObject1 = date_create($current_time); 
                 $dateTimeObject2 = date_create($time_difference); 
-                
                 // Calculating the difference between DateTime objects
                 $interval = date_diff($dateTimeObject1, $dateTimeObject2); 
                 
                 $minutes = $interval->days * 24 * 60;
                 $minutes += $interval->h * 60;
                 $minutes += $interval->i;
+                // dd($minutes, $interval , $dateTimeObject1, $dateTimeObject2);
 
                 if($minutes <= 60)
                 {
@@ -72,6 +73,7 @@ class NewPasswordController extends Controller
             }
             else
             {
+                dd('else',$check_user, $check_user->updated_at);
                 $time_difference = date('H:i:s',strtotime($check_user->created_at));
 
                 // Creating DateTime objects
@@ -93,22 +95,23 @@ class NewPasswordController extends Controller
 
             if($check_interval)
             {
-                if(Hash::check($request->token,$check_user->token))
-                {
+                // if(Hash::check($request->token,$check_user->token))
+                // {
                     $user = User::where('email',$request->email)->first();
                     $user->password = Hash::make($request->password);
                     $user->save();
     
                     return redirect()->route('student.login')->with('status','Password Changed Successfully');
-                }
-                else
-                {
-                    return Redirect::back()->with('error', 'This password reset token is invalid.');
-                }   
+                // }
+                // else
+                // {
+                //     return Redirect::back()->with('error', 'This password reset token is invalid.');
+                // }   
             }
             else
             {
-                return abort(404, 'Page not found.');
+                return Redirect::back()->with('error', 'This password reset token is invalid.');
+                // return abort(404, 'Page not found.');
             }
            
         }

@@ -22,6 +22,8 @@ class InstructorVideos extends Model
         'video_duration',
         'status',
         'created_at',
+        'is_dacast_video',
+        'dacast_video_asset_id',
     ];
 
     protected $dates = ['deleted_at'];

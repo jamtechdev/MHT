@@ -261,7 +261,8 @@ class RegisteredUserController extends Controller
             $benefits = SubscriptionBenefit::get();
             
            // $allPlans = SubscriptionPlan::where('validity_type','!=',4)->get(); 
-           $allPlans = SubscriptionPlan::where('status',1)->get();; 
+           $allPlans = SubscriptionPlan::where('status',1)->get();
+        //    dd($allPlans->toArray(),$firstPlan->toArray());
             // return view('auth.free');
             return view('auth.studentregister', compact('instrutorVideoCount','registerType','firstPlan','benefits','allPlans','referral_code'));
         } else {
@@ -418,7 +419,7 @@ class RegisteredUserController extends Controller
     * @return \Illuminate\View\View
     */
     public function getRegisterStepOne()
-    {  
+    {
         $registerData = Auth::user();
 
         if($registerData['upgrade_plan'] == 1)
@@ -426,8 +427,12 @@ class RegisteredUserController extends Controller
             return Redirect::to('student_profile');
         }
         
+        if(!$registerData['subscription_id']){
+            Auth::user()->subscription_id = 1;
+            Auth::user()->update();
+        }
         $planDetails = SubscriptionPlan::where('id',$registerData['subscription_id'])->first();
-
+        // dd($registerData, $planDetails);
         $planBenefits = explode(",",$planDetails->benefits);
 
         $benefits = array();
@@ -582,6 +587,7 @@ class RegisteredUserController extends Controller
             Session::flash('success1', 'Your subscription has been completed successfully');
 
             $viewPaidVideoURL = Session::get('view_paid_video_url');
+            dd($viewPaidVideoURL);
             if($viewPaidVideoURL) {
                 Session::put('view_paid_video_url', null);
                 return Redirect::to($viewPaidVideoURL);

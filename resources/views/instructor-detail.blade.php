@@ -633,8 +633,10 @@
     </div> -->
 
 
-
-
+    @if((count($instructorBiographyData) > 0) and (!empty($instructorBiographyData[0]['dacast_video_asset_id'])))
+        <script src="https://player.dacast.com/js/player.js?contentId={{ $instructorBiographyData[0]['dacast_video_asset_id'] }}"></script>
+    @endif
+    {{-- @dd($instructorBiographyData, $instructorDemonstrationData) --}}
     <div class="categories_swiper__slider-block">
         <div class="container">
             <div class="swiper__main_blocks">
@@ -647,9 +649,33 @@
                             <!-- <div class="embed-responsive-item wistia_embed wistia_async_rpzrs4lf1w resumable=true autoPlay=false endVideoBehavior=loop videoFoam=true muted=false controlsVisibleOnLoad=false fullscreenButton=false"></div>
                             -->
                             @if(count($instructorBiographyData) && isset($instructorBiographyData[0]['video_id']))
-                                <div class="embed-responsive-item wistia_embed wistia_async_{{$instructorBiographyData[0]['video_id']}} resumable=true playlistLinks=auto qualityMin=1080 autoPlay=false endVideoBehavior=loop videoFoam=true muted=false controlsVisibleOnLoad=false fullscreenButton=true"></div>
+                                @if(isset($instructorBiographyData[0]['is_dacast_video']) and ($instructorBiographyData[0]['is_dacast_video'] == 1))
+                                    <div id="bio-demo-dacast-video-player"></div>
+                                    <script>
+                                        var CONTENT_ID = "{{ @$instructorBiographyData[0]['dacast_video_asset_id'] }}";
+                                        var is_dacast_video = 1;
+                                    </script>
+                                @else
+                                    <div class="embed-responsive-item wistia_embed wistia_async_{{$instructorBiographyData[0]['video_id']}} resumable=true playlistLinks=auto qualityMin=1080 autoPlay=false endVideoBehavior=loop videoFoam=true muted=false controlsVisibleOnLoad=false fullscreenButton=true"></div>
+                                    <script>
+                                        var CONTENT_ID = "";
+                                        var is_dacast_video = 0;
+                                    </script>
+                                @endif
                             @elseif(count($instructorDemonstrationData) && isset($instructorDemonstrationData[0]['video_id']))
-                                 <div class="embed-responsive-item wistia_embed wistia_async_{{$instructorDemonstrationData[0]['video_id']}} resumable=true playlistLinks=auto qualityMin=1080 autoPlay=false endVideoBehavior=loop videoFoam=true muted=false controlsVisibleOnLoad=false fullscreenButton=true"></div>
+                                @if(isset($instructorDemonstrationData[0]['is_dacast_video']) and ($instructorDemonstrationData[0]['is_dacast_video'] == 1))
+                                    <div id="bio-demo-dacast-video-player"></div>
+                                    <script>
+                                        var CONTENT_ID = "{{ @$instructorBiographyData[0]['instructorDemonstrationData'] }}";
+                                        var is_dacast_video = 1;
+                                    </script>
+                                @else
+                                    <div class="embed-responsive-item wistia_embed wistia_async_{{$instructorDemonstrationData[0]['video_id']}} resumable=true playlistLinks=auto qualityMin=1080 autoPlay=false endVideoBehavior=loop videoFoam=true muted=false controlsVisibleOnLoad=false fullscreenButton=true"></div>
+                                    <script>
+                                        var CONTENT_ID = "";
+                                        var is_dacast_video = 0;
+                                    </script>
+                                @endif     
                             @else
                                 <img class="img-responsive img-fluid" src="{{ asset('assets/front/images/no_video.png') }}" />
                             @endif
@@ -687,6 +713,9 @@
             <div class="container">
                 <div class="swiper__main_blocks">
                     <h2 class="mb-1 mb-md-0">Instructor Biography & Demonstrations</h2>
+                    <div class="container text-end">
+                        <button class="btn btn-primary view-more-school-btn" onclick="">View All</button>
+                    </div>
                     <div class="swiper schools_and_instructors mt-2">
                         <div class="swiper-wrapper schools_and_instructors1">
                         @if(count($instructorDemonstrationData))
@@ -962,7 +991,13 @@
         </div>
     <!-- Schools and Instructors end -->
     
-    <!-- Dynamic Video Section-->    
+    <!-- Dynamic Video Section-->
+
+    @php
+        $classId = 0;
+        $class_within_id = 0;
+    @endphp
+    
     @auth 
         @if(count($levels))
             @foreach($levels as $l)
@@ -972,7 +1007,7 @@
                         <div class="swiper__main_blocks">
                             <h2 class="mb-3 mb-md-0">{{ $l['level_name'] }} Videos</h2>
                             <hr>
-                            <div class="swiper bronze_videos mt-4">
+                            <div class="swiper custom-swiper{{ $classId }} bronze_videos_ mt-4">
                                 <div class="swiper-wrapper bronze_videos1">
                                 @if(count($l['videoData']))
                                     @foreach($l['videoData'] as $insFreeData)
@@ -984,7 +1019,8 @@
                                                     <div class="Play-btn">
                                                         <i class="fa-regular fa-circle-play fa-2xl"></i>
                                                     </div>
-                                                    <div class="badge-dark-video-time">{{ Carbon\Carbon::parse($insFreeData['video_duration'])->format('i:s'); }}</div>
+                                                    {{-- <div class="badge-dark-video-time">{{ Carbon\Carbon::parse($insFreeData['video_duration'])->format('i:s'); }}</div> --}}
+                                                    <div class="badge-dark-video-time">{{ $insFreeData['video_duration'] }}</div>
                                                 </div>
                                                 <div class="maz__swiper_block_discipline-content pb-2">
                                                     <h6 style="font-weight:600;">{{ $insFreeData['title'] }}</h6>
@@ -1241,12 +1277,21 @@
                                     @endphp
                                 </div>
                             </div>
-                            <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
+
+                            <div class="category-swiper-button-next-{{$classId}} swiper-button-next maz__swiper_btn-next">
+                                <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                            </div>
+                            
+                            <div class="category-swiper-button-prev-{{$classId}} swiper-button-prev maz__swiper_btn-prev">
+                                <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                            </div>
+
+                            {{-- <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
                                 <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
                             </div>
                             <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
                                 <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                            </div>
+                            </div> --}}
                         </div>
                     </div>
                 </div>
@@ -1268,7 +1313,8 @@
                                                     <div class="Play-btn">
                                                         <i class="fa-regular fa-circle-play fa-2xl"></i>
                                                     </div>
-                                                    <div class="badge-dark-video-time">{{ Carbon\Carbon::parse($insFreeData['video_duration'])->format('i:s'); }}</div>
+                                                    {{-- <div class="badge-dark-video-time">{{ Carbon\Carbon::parse($insFreeData['video_duration'])->format('i:s'); }}</div> --}}
+                                                    <div class="badge-dark-video-time">{{ $insFreeData['video_duration'] }}</div>
                                                 </div>
                                                 <div class="maz__swiper_block_discipline-content pb-2">
                                                     <h6 style="font-weight:600;">{{ $insFreeData['title'] }}</h6>
@@ -1528,25 +1574,46 @@
                             @if($l['level_id'] != 1)
                                 @if(Auth::user()->subscription_id != 1 && Auth::user()->payment_status == 1 && $isDisputedUser != "Disputed")
                                     
-                                    <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
+                                    {{-- <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
                                         <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
                                     </div>
                                     <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
                                         <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                    </div> --}}
+                                    <div class="category-swiper-button-next-{{$classId}} swiper-button-next maz__swiper_btn-next">
+                                        <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                    </div>
+                                    
+                                    <div class="category-swiper-button-prev-{{$classId}} swiper-button-prev maz__swiper_btn-prev">
+                                        <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
                                     </div>
                                 @else
-                                    <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
+                                    {{-- <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
                                         <img  onclick="upgradePlanModal()" src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
                                     </div>
                                     <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
                                         <img  onclick="upgradePlanModal()" src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                    </div> --}}
+                                    <div class="category-swiper-button-next-{{$classId}} swiper-button-next maz__swiper_btn-next">
+                                        <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                    </div>
+                                    
+                                    <div class="category-swiper-button-prev-{{$classId}} swiper-button-prev maz__swiper_btn-prev">
+                                        <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
                                     </div>
                                 @endif
                             @else
-                                <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
+                                {{-- <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
                                     <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
                                 </div>
                                 <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
+                                    <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                </div> --}}
+                                <div class="category-swiper-button-next-{{$classId}} swiper-button-next maz__swiper_btn-next">
+                                    <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                </div>
+                                
+                                <div class="category-swiper-button-prev-{{$classId}} swiper-button-prev maz__swiper_btn-prev">
                                     <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
                                 </div>
                             @endif    
@@ -1572,7 +1639,8 @@
                                                             <div class="Play-btn">
                                                                 <i class="fa-regular fa-circle-play fa-2xl"></i>
                                                             </div>
-                                                            <div class="badge-dark-video-time">{{ Carbon\Carbon::parse($insFreeData['video_duration'])->format('i:s'); }}</div>
+                                                            {{-- <div class="badge-dark-video-time">{{ Carbon\Carbon::parse($insFreeData['video_duration'])->format('i:s'); }}</div> --}}
+                                                            <div class="badge-dark-video-time">{{ $insFreeData['video_duration'] }}</div>
                                                         </div>
                                                         <div class="maz__swiper_block_discipline-content pb-2">
                                                             <h6 style="font-weight:600;">{{ $insFreeData['title'] }}</h6>
@@ -1831,28 +1899,48 @@
                                     </div>
                                     @if($l['level_id'] != 1)
                                         @if(Auth::user()->subscription_id != 1 && Auth::user()->payment_status == 1 && $isDisputedUser != "Disputed")
+                                            <div class="category-swiper-button-next-{{$classId}} swiper-button-next maz__swiper_btn-next">
+                                                <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                            </div>
                                             
-                                            <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
+                                            <div class="category-swiper-button-prev-{{$classId}} swiper-button-prev maz__swiper_btn-prev">
+                                                <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                            </div>
+                                            {{-- <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
                                                 <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
                                             </div>
                                             <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
                                                 <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                                            </div>
+                                            </div> --}}
                                         @else
-                                            <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
+                                            <div class="category-swiper-button-next-{{$classId}} swiper-button-next maz__swiper_btn-next">
+                                                <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                            </div>
+                                            
+                                            <div class="category-swiper-button-prev-{{$classId}} swiper-button-prev maz__swiper_btn-prev">
+                                                <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                            </div>
+                                            {{-- <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
                                                 <img  onclick="upgradePlanModal()" src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
                                             </div>
                                             <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
                                                 <img  onclick="upgradePlanModal()" src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                                            </div>
+                                            </div> --}}
                                         @endif
                                     @else
-                                        <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
+                                        <div class="category-swiper-button-next-{{$classId}} swiper-button-next maz__swiper_btn-next">
+                                            <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                        </div>
+                                        
+                                        <div class="category-swiper-button-prev-{{$classId}} swiper-button-prev maz__swiper_btn-prev">
+                                            <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                        </div>
+                                        {{-- <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
                                             <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
                                         </div>
                                         <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
                                             <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                                        </div>
+                                        </div> --}}
                                     @endif    
                                 </div>
                             </div>
@@ -2134,12 +2222,19 @@
                                             @endphp
                                         </div>
                                     </div>
-                                    <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
+                                    <div class="category-swiper-button-next-{{$classId}} swiper-button-next maz__swiper_btn-next">
+                                        <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                    </div>
+                                    
+                                    <div class="category-swiper-button-prev-{{$classId}} swiper-button-prev maz__swiper_btn-prev">
+                                        <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                    </div>
+                                    {{-- <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
                                         <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
                                     </div>
                                     <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
                                         <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                                    </div>
+                                    </div> --}}
                                 </div>
                             </div>
                         </div>
@@ -2185,12 +2280,19 @@
                                             @endphp
                                         </div>
                                     </div>
-                                    <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
+                                    <div class="category-swiper-button-next-{{$classId}} swiper-button-next maz__swiper_btn-next">
+                                        <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                    </div>
+                                    
+                                    <div class="category-swiper-button-prev-{{$classId}} swiper-button-prev maz__swiper_btn-prev">
+                                        <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                    </div>
+                                    {{-- <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
                                         <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
                                     </div>
                                     <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
                                         <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                                    </div>
+                                    </div> --}}
                                 </div>
                             </div>
                         </div>
@@ -2468,12 +2570,20 @@
                                         </div>
                                     </div>
 
-                                    <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
+                                    <div class="category-swiper-button-next-{{$classId}} swiper-button-next maz__swiper_btn-next">
+                                        <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                    </div>
+                                    
+                                    <div class="category-swiper-button-prev-{{$classId}} swiper-button-prev maz__swiper_btn-prev">
+                                        <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                    </div>
+
+                                    {{-- <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
                                         <img  onclick="upgradePlanModal()" src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
                                     </div>
                                     <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
                                         <img  onclick="upgradePlanModal()" src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                                    </div>
+                                    </div> --}}
                                        
                                 </div>
                             </div>
@@ -2755,11 +2865,18 @@
                                             @endphp
                                         </div>
                                     </div>
-                                    <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
+                                    {{-- <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
                                         <img onclick="upgradePlanModal()" src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
                                     </div>
                                     <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
                                         <img onclick="upgradePlanModal()" src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                    </div> --}}
+                                    <div class="category-swiper-button-next-{{$classId}} swiper-button-next maz__swiper_btn-next">
+                                        <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                    </div>
+                                    
+                                    <div class="category-swiper-button-prev-{{$classId}} swiper-button-prev maz__swiper_btn-prev">
+                                        <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
                                     </div>
                                 </div>
                             </div>
@@ -2806,11 +2923,18 @@
                                             @endphp
                                         </div>
                                     </div>
-                                    <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
+                                    {{-- <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
                                         <img onclick="upgradePlanModal()" src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
                                     </div>
                                     <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
                                         <img onclick="upgradePlanModal()" src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                    </div> --}}
+                                    <div class="category-swiper-button-next-{{$classId}} swiper-button-next maz__swiper_btn-next">
+                                        <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                    </div>
+                                    
+                                    <div class="category-swiper-button-prev-{{$classId}} swiper-button-prev maz__swiper_btn-prev">
+                                        <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
                                     </div>
                                 </div>
                             </div>
@@ -2822,895 +2946,329 @@
         @endif
     @else
         @if(count($levels))
-            @foreach($levels as $l)
-                @if($l['level_id'] == 1)
-
-                <div class="categories_swiper__slider-block">
-                    <div class="container">
-                        <div class="swiper__main_blocks">
-                            <h2 class="mb-3 mb-md-0">{{ $l['level_name'] }} Videos</h2>
-                            <hr>
-                            <div class="swiper bronze_videos mt-4">
-                                <div class="swiper-wrapper bronze_videos1">
-                                @if(count($l['videoData']))
-                                    @foreach($l['videoData'] as $insFreeData)
-                                    <div class="swiper-slide">
-                                        <a href="javascript::void(0)" onclick="loginSignupModal()">
-                                            <div class="maz__swiper_slider_common_block">
-                                                <div class="maz__swiper_block_discipline-img">
-                                        
-                                                <img src="{{ str_replace('image_crop_resized=200x120','',$insFreeData['video_thumbnail']) ?? '' }}"  alt="{{ $insFreeData['title'] ?? '' }}">
-                                                    {{--<img src="{{ $insFreeData['video_thumbnail'] }}"  alt="{{ $insFreeData['title'] }}">--}}
-                                                    <div class="Play-btn">
-                                                        <i class="fa-regular fa-circle-play fa-2xl"></i>
+            @foreach($levels as $main_key => $l)
+                
+                @if(($main_key ==0) or ($main_key == 1))
+                    @if($l['level_id'] == 1)
+                    <div class="categories_swiper__slider-block">
+                        <div class="container">
+                            <div class="swiper__main_blocks">
+                                <h2 class="mb-3 mb-md-0">{{ $l['level_name'] }} Videos</h2>
+                                <hr>
+                                <div class="swiper custom-swiper{{ $classId }} bronze_videos_ mt-4">
+                                    <div class="swiper-wrapper bronze_videos1">
+                                    @if(count($l['videoData']))
+                                        @foreach($l['videoData'] as $insFreeData)
+                                        <div class="swiper-slide">
+                                            <a href="javascript::void(0)" onclick="loginSignupModal()">
+                                                <div class="maz__swiper_slider_common_block">
+                                                    <div class="maz__swiper_block_discipline-img">
+                                            
+                                                    <img src="{{ str_replace('image_crop_resized=200x120','',$insFreeData['video_thumbnail']) ?? '' }}"  alt="{{ $insFreeData['title'] ?? '' }}">
+                                                        {{--<img src="{{ $insFreeData['video_thumbnail'] }}"  alt="{{ $insFreeData['title'] }}">--}}
+                                                        <div class="Play-btn">
+                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                        </div>
+                                                        <div class="badge-dark-video-time">{{ Carbon\Carbon::parse($insFreeData['video_duration'])->format('i:s'); }}</div>
                                                     </div>
-                                                    <div class="badge-dark-video-time">{{ Carbon\Carbon::parse($insFreeData['video_duration'])->format('i:s'); }}</div>
+                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                        <h6 style="font-weight:600;">{{ $insFreeData['title'] }}</h6>
+                                                        <!-- <div class="logo-background">
+                                                            <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
+                                                        </div> -->
+                                                    {{--<p class="description">{{ $insBronzeData['description'] }}</p>--}}
+                                                    </div>
+                                                    {{--<div class="swiper_block_discipline__profile-box">
+                                                        <div class="badge-icons">
+                                                            <img src="{{ asset('assets/front/images/medal.svg') }}"  alt="icon group">
+                                                            <span>Bronze</span>
+                                                        </div>
+                                                        <div class="badge-icons">
+                                                            <img src="{{ asset('assets/front/images/video.svg') }}"  alt="icon group">
+                                                            <span>123</span>
+                                                        </div>
+                                                        <div class="badge-icons">
+                                                            <img src="{{ asset('assets/front/images/belt.svg') }}"  alt="icon group">
+                                                        </div>
+                                                    </div>--}}
                                                 </div>
-                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                    <h6 style="font-weight:600;">{{ $insFreeData['title'] }}</h6>
-                                                    <!-- <div class="logo-background">
-                                                        <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                                    </div> -->
-                                                {{--<p class="description">{{ $insBronzeData['description'] }}</p>--}}
-                                                </div>
-                                                {{--<div class="swiper_block_discipline__profile-box">
-                                                    <div class="badge-icons">
-                                                        <img src="{{ asset('assets/front/images/medal.svg') }}"  alt="icon group">
-                                                        <span>Bronze</span>
-                                                    </div>
-                                                    <div class="badge-icons">
-                                                        <img src="{{ asset('assets/front/images/video.svg') }}"  alt="icon group">
-                                                        <span>123</span>
-                                                    </div>
-                                                    <div class="badge-icons">
-                                                        <img src="{{ asset('assets/front/images/belt.svg') }}"  alt="icon group">
-                                                    </div>
-                                                </div>--}}
-                                            </div>
-                                        </a>    
-                                    </div>
-                                    @endforeach
-                                    @endif
-                                    @php
-                                        $free_count = count($l['videoData']);
-                                        if($free_count == 0)
-                                        {
-                                            for($a = 0;$a < 8;$a++)
+                                            </a>    
+                                        </div>
+                                        @endforeach
+                                        @endif
+                                        @php
+                                            $free_count = count($l['videoData']);
+                                            if($free_count == 0)
                                             {
-                                                @endphp
-                                                    <div class="swiper-slide">
+                                                for($a = 0;$a < 8;$a++)
+                                                {
+                                                    @endphp
+                                                        <div class="swiper-slide">
+                                                        
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                        <div class="Play-btn">
+                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            
+                                                        </div>
+                                                    @php
+                                                }
+                                            }
+
+                                            if($free_count == 1)
+                                            {
+                                                for($a = 0;$a < 7;$a++)
+                                                {
+                                                    @endphp
+                                                        <div class="swiper-slide">
+                                                            <div class="maz__swiper_slider_common_block">
+                                                                <div class="maz__swiper_block_discipline-img">
+                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                @else
+                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                @endif
+                                                                <div class="Play-btn">
+                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                        </div>
+                                                                </div>
+                                                                <div class="maz__swiper_block_discipline-content pb-2">
+                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                </div>
+                                                            
+                                                            </div>
+                                                        </div>
+                                                    @php
+                                                }
+                                            }
+
+                                            if($free_count == 2)
+                                            {
+                                                for($a = 0;$a < 6;$a++)
+                                                {
+                                                    @endphp
+                                                        <div class="swiper-slide">
+                                                            <div class="maz__swiper_slider_common_block">
+                                                                <div class="maz__swiper_block_discipline-img">
+                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                @else
+                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                @endif
+                                                                <div class="Play-btn">
+                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                        </div>
+                                                                </div>
+                                                                <div class="maz__swiper_block_discipline-content pb-2">
+                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                </div>
+                                                            
+                                                            </div>
+                                                        </div>
+                                                    @php
+                                                }
+                                            }
+
+                                            if($free_count == 3)
+                                            {
+                                                for($a = 0;$a < 5;$a++)
+                                                {
+                                                    @endphp
+                                                        <div class="swiper-slide">
+                                                            <div class="maz__swiper_slider_common_block">
+                                                                <div class="maz__swiper_block_discipline-img">
+                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                @else
+                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                @endif
+                                                                <div class="Play-btn">
+                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                        </div>
+                                                                </div>
+                                                                <div class="maz__swiper_block_discipline-content pb-2">
+                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                </div>
+                                                            
+                                                            </div>
+                                                        </div>
+                                                    @php
+                                                }
+                                            }
+
+                                            if($free_count == 4)
+                                            {
+                                                for($a = 0;$a < 4;$a++)
+                                                {
+                                                    @endphp
+                                                        <div class="swiper-slide">
+                                                            <div class="maz__swiper_slider_common_block">
+                                                                <div class="maz__swiper_block_discipline-img">
+                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                @else
+                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                @endif
+                                                                <div class="Play-btn">
+                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                        </div>
+                                                                </div>
+                                                                <div class="maz__swiper_block_discipline-content pb-2">
+                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                </div>
+                                                            
+                                                            </div>
+                                                        </div>
+                                                    @php
+                                                }
+                                            }
+
+                                            if($free_count == 5)
+                                            {
+                                                for($a = 0;$a < 3;$a++)
+                                                {
+                                                    @endphp
+                                                        <div class="swiper-slide">
+                                                            <div class="maz__swiper_slider_common_block">
+                                                                <div class="maz__swiper_block_discipline-img">
+                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                @else
+                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                @endif
+                                                                <div class="Play-btn">
+                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                        </div>
+                                                                </div>
+                                                                <div class="maz__swiper_block_discipline-content pb-2">
+                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                </div>
+                                                            
+                                                            </div>
+                                                        </div>
+                                                    @php
+                                                }
+                                            }
+
+                                            if($free_count == 6)
+                                            {
+                                                for($a = 0;$a < 2;$a++)
+                                                {
+                                                    @endphp
+                                                        <div class="swiper-slide">
+                                                            <div class="maz__swiper_slider_common_block">
+                                                                <div class="maz__swiper_block_discipline-img">
+                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                @else
+                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                @endif
+                                                                <div class="Play-btn">
+                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                        </div>
+                                                                </div>
+                                                                <div class="maz__swiper_block_discipline-content pb-2">
+                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                </div>
+                                                            
+                                                            </div>
+                                                        </div>
+                                                    @php
+                                                }
+                                            }
+
+                                            if($free_count == 7)
+                                            {
+                                                for($a = 0;$a < 1;$a++)
+                                                {
+                                                    @endphp
+                                                        <div class="swiper-slide">
+                                                            <div class="maz__swiper_slider_common_block">
+                                                                <div class="maz__swiper_block_discipline-img">
+                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                @else
+                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                @endif
+                                                                <div class="Play-btn">
+                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                        </div>
+                                                                </div>
+                                                                <div class="maz__swiper_block_discipline-content pb-2">
+                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                </div>
+                                                            
+                                                            </div>
+                                                        </div>
+                                                    @php
+                                                }
+                                            }
+                                        @endphp
+                                    </div>
+                                </div>
+
+                                <div class="category-swiper-button-next-{{$classId}} swiper-button-next maz__swiper_btn-next">
+                                    <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                </div>
+                                
+                                <div class="category-swiper-button-prev-{{$classId}} swiper-button-prev maz__swiper_btn-prev">
+                                    <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                </div>
+                                {{-- <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
+                                
+                                    <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
                                                     
-                                                            <div class="maz__swiper_slider_common_block">
-                                                                <div class="maz__swiper_block_discipline-img">
-                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                                @else
-                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                                @endif
-                                                                    <div class="Play-btn">
-                                                                        <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                                </div>
-                                                               
-                                                            </div>
-                                                        
-                                                    </div>
-                                                @php
-                                            }
-                                        }
-
-                                        if($free_count == 1)
-                                        {
-                                            for($a = 0;$a < 7;$a++)
-                                            {
-                                                @endphp
-                                                    <div class="swiper-slide">
-                                                        <div class="maz__swiper_slider_common_block">
-                                                            <div class="maz__swiper_block_discipline-img">
-                                                            @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                            @else
-                                                                <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                            @endif
-                                                            <div class="Play-btn">
-                                                                        <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                    </div>
-                                                            </div>
-                                                            <div class="maz__swiper_block_discipline-content pb-2">
-                                                                <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                            </div>
-                                                           
-                                                        </div>
-                                                    </div>
-                                                @php
-                                            }
-                                        }
-
-                                        if($free_count == 2)
-                                        {
-                                            for($a = 0;$a < 6;$a++)
-                                            {
-                                                @endphp
-                                                    <div class="swiper-slide">
-                                                        <div class="maz__swiper_slider_common_block">
-                                                            <div class="maz__swiper_block_discipline-img">
-                                                            @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                            @else
-                                                                <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                            @endif
-                                                            <div class="Play-btn">
-                                                                        <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                    </div>
-                                                            </div>
-                                                            <div class="maz__swiper_block_discipline-content pb-2">
-                                                                <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                            </div>
-                                                         
-                                                        </div>
-                                                    </div>
-                                                @php
-                                            }
-                                        }
-
-                                        if($free_count == 3)
-                                        {
-                                            for($a = 0;$a < 5;$a++)
-                                            {
-                                                @endphp
-                                                    <div class="swiper-slide">
-                                                        <div class="maz__swiper_slider_common_block">
-                                                            <div class="maz__swiper_block_discipline-img">
-                                                            @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                            @else
-                                                                <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                            @endif
-                                                            <div class="Play-btn">
-                                                                        <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                    </div>
-                                                            </div>
-                                                            <div class="maz__swiper_block_discipline-content pb-2">
-                                                                <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                            </div>
-                                                          
-                                                        </div>
-                                                    </div>
-                                                @php
-                                            }
-                                        }
-
-                                        if($free_count == 4)
-                                        {
-                                            for($a = 0;$a < 4;$a++)
-                                            {
-                                                @endphp
-                                                    <div class="swiper-slide">
-                                                        <div class="maz__swiper_slider_common_block">
-                                                            <div class="maz__swiper_block_discipline-img">
-                                                            @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                            @else
-                                                                <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                            @endif
-                                                            <div class="Play-btn">
-                                                                        <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                    </div>
-                                                            </div>
-                                                            <div class="maz__swiper_block_discipline-content pb-2">
-                                                                <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                            </div>
-                                                          
-                                                        </div>
-                                                    </div>
-                                                @php
-                                            }
-                                        }
-
-                                        if($free_count == 5)
-                                        {
-                                            for($a = 0;$a < 3;$a++)
-                                            {
-                                                @endphp
-                                                    <div class="swiper-slide">
-                                                        <div class="maz__swiper_slider_common_block">
-                                                            <div class="maz__swiper_block_discipline-img">
-                                                            @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                            @else
-                                                                <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                            @endif
-                                                            <div class="Play-btn">
-                                                                        <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                    </div>
-                                                            </div>
-                                                            <div class="maz__swiper_block_discipline-content pb-2">
-                                                                <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                            </div>
-                                                          
-                                                        </div>
-                                                    </div>
-                                                @php
-                                            }
-                                        }
-
-                                        if($free_count == 6)
-                                        {
-                                            for($a = 0;$a < 2;$a++)
-                                            {
-                                                @endphp
-                                                    <div class="swiper-slide">
-                                                        <div class="maz__swiper_slider_common_block">
-                                                            <div class="maz__swiper_block_discipline-img">
-                                                            @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                            @else
-                                                                <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                            @endif
-                                                            <div class="Play-btn">
-                                                                        <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                    </div>
-                                                            </div>
-                                                            <div class="maz__swiper_block_discipline-content pb-2">
-                                                                <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                            </div>
-                                                          
-                                                        </div>
-                                                    </div>
-                                                @php
-                                            }
-                                        }
-
-                                        if($free_count == 7)
-                                        {
-                                            for($a = 0;$a < 1;$a++)
-                                            {
-                                                @endphp
-                                                    <div class="swiper-slide">
-                                                        <div class="maz__swiper_slider_common_block">
-                                                            <div class="maz__swiper_block_discipline-img">
-                                                            @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                            @else
-                                                                <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                            @endif
-                                                            <div class="Play-btn">
-                                                                        <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                    </div>
-                                                            </div>
-                                                            <div class="maz__swiper_block_discipline-content pb-2">
-                                                                <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                            </div>
-                                                          
-                                                        </div>
-                                                    </div>
-                                                @php
-                                            }
-                                        }
-                                    @endphp
-                                </div>
-                            </div>
-                            <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
-                            
-                                <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
-                                                
-                            </div>
-                            <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
-                                <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                @elseif($l['level_id'] == 5)
-                <div class="categories_swiper__slider-block">
-                        <div class="container">
-                            <div class="swiper__main_blocks">
-                                <h2 class="mb-3 mb-md-0">{{ $l['level_name'] }} For You</h2>
-                                <hr>
-                                <div class="swiper bronze_videos mt-4">
-                                    <div class="swiper-wrapper bronze_videos1">
-                                    @if(count($l['videoData']))
-                                        @foreach($l['videoData'] as $insFreeData)
-                                        <div class="swiper-slide">
-                                            <a href="javascript::void(0)" onclick="loginSignupModal()">
-                                                <div class="maz__swiper_slider_common_block">
-                                                    <div class="maz__swiper_block_discipline-img">
-                                                      
-                                                    <img src="{{ str_replace('image_crop_resized=200x120','',$insFreeData['video_thumbnail']) ?? '' }}"  alt="{{ $insFreeData['title'] ?? '' }}">
-                                                        {{--<img src="{{ $insFreeData['video_thumbnail'] }}"  alt="{{ $insFreeData['title'] }}">--}}
-                                                        <div class="Play-btn">
-                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                        </div>
-                                                        <div class="badge-dark-video-time">{{ Carbon\Carbon::parse($insFreeData['video_duration'])->format('i:s'); }}</div>
-                                                    </div>
-                                                    <div class="maz__swiper_block_discipline-content pb-2">
-                                                        <h6 style="font-weight:600;">{{ $insFreeData['title'] }}</h6>
-                                                        <!-- <div class="logo-background">
-                                                            <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                                        </div> -->
-                                                    {{--<p class="description">{{ $insBronzeData['description'] }}</p>--}}
-                                                    </div>
-                                                    {{--<div class="swiper_block_discipline__profile-box">
-                                                        <div class="badge-icons">
-                                                            <img src="{{ asset('assets/front/images/medal.svg') }}"  alt="icon group">
-                                                            <span>Bronze</span>
-                                                        </div>
-                                                        <div class="badge-icons">
-                                                            <img src="{{ asset('assets/front/images/video.svg') }}"  alt="icon group">
-                                                            <span>123</span>
-                                                        </div>
-                                                        <div class="badge-icons">
-                                                            <img src="{{ asset('assets/front/images/belt.svg') }}"  alt="icon group">
-                                                        </div>
-                                                    </div>--}}
-                                                </div>
-                                            </a>    
-                                        </div>
-                                        @endforeach
-                                        @endif
-                                        @php
-                                            $free_count = count($l['videoData']);
-                                            if($free_count == 0)
-                                            {
-                                                for($a = 0;$a < 8;$a++)
-                                                {
-                                                    @endphp
-                                                        <div class="swiper-slide">
-                                                        
-                                                                <div class="maz__swiper_slider_common_block">
-                                                                    <div class="maz__swiper_block_discipline-img">
-                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                                    @else
-                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                                    @endif
-                                                                        <div class="Play-btn">
-                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="maz__swiper_block_discipline-content pb-2">
-                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                                    </div>
-                                                                
-                                                                </div>
-                                                            
-                                                        </div>
-                                                    @php
-                                                }
-                                            }
-
-                                            if($free_count == 1)
-                                            {
-                                                for($a = 0;$a < 7;$a++)
-                                                {
-                                                    @endphp
-                                                        <div class="swiper-slide">
-                                                            <div class="maz__swiper_slider_common_block">
-                                                                <div class="maz__swiper_block_discipline-img">
-                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                                @else
-                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                                @endif
-                                                                <div class="Play-btn">
-                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                        </div>
-                                                                </div>
-                                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                                </div>
-                                                            
-                                                            </div>
-                                                        </div>
-                                                    @php
-                                                }
-                                            }
-
-                                            if($free_count == 2)
-                                            {
-                                                for($a = 0;$a < 6;$a++)
-                                                {
-                                                    @endphp
-                                                        <div class="swiper-slide">
-                                                            <div class="maz__swiper_slider_common_block">
-                                                                <div class="maz__swiper_block_discipline-img">
-                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                                @else
-                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                                @endif
-                                                                <div class="Play-btn">
-                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                        </div>
-                                                                </div>
-                                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                                </div>
-                                                            
-                                                            </div>
-                                                        </div>
-                                                    @php
-                                                }
-                                            }
-
-                                            if($free_count == 3)
-                                            {
-                                                for($a = 0;$a < 5;$a++)
-                                                {
-                                                    @endphp
-                                                        <div class="swiper-slide">
-                                                            <div class="maz__swiper_slider_common_block">
-                                                                <div class="maz__swiper_block_discipline-img">
-                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                                @else
-                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                                @endif
-                                                                <div class="Play-btn">
-                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                        </div>
-                                                                </div>
-                                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                                </div>
-                                                            
-                                                            </div>
-                                                        </div>
-                                                    @php
-                                                }
-                                            }
-
-                                            if($free_count == 4)
-                                            {
-                                                for($a = 0;$a < 4;$a++)
-                                                {
-                                                    @endphp
-                                                        <div class="swiper-slide">
-                                                            <div class="maz__swiper_slider_common_block">
-                                                                <div class="maz__swiper_block_discipline-img">
-                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                                @else
-                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                                @endif
-                                                                <div class="Play-btn">
-                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                        </div>
-                                                                </div>
-                                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                                </div>
-                                                            
-                                                            </div>
-                                                        </div>
-                                                    @php
-                                                }
-                                            }
-
-                                            if($free_count == 5)
-                                            {
-                                                for($a = 0;$a < 3;$a++)
-                                                {
-                                                    @endphp
-                                                        <div class="swiper-slide">
-                                                            <div class="maz__swiper_slider_common_block">
-                                                                <div class="maz__swiper_block_discipline-img">
-                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                                @else
-                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                                @endif
-                                                                <div class="Play-btn">
-                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                        </div>
-                                                                </div>
-                                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                                </div>
-                                                            
-                                                            </div>
-                                                        </div>
-                                                    @php
-                                                }
-                                            }
-
-                                            if($free_count == 6)
-                                            {
-                                                for($a = 0;$a < 2;$a++)
-                                                {
-                                                    @endphp
-                                                        <div class="swiper-slide">
-                                                            <div class="maz__swiper_slider_common_block">
-                                                                <div class="maz__swiper_block_discipline-img">
-                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                                @else
-                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                                @endif
-                                                                <div class="Play-btn">
-                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                        </div>
-                                                                </div>
-                                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                                </div>
-                                                            
-                                                            </div>
-                                                        </div>
-                                                    @php
-                                                }
-                                            }
-
-                                            if($free_count == 7)
-                                            {
-                                                for($a = 0;$a < 1;$a++)
-                                                {
-                                                    @endphp
-                                                        <div class="swiper-slide">
-                                                            <div class="maz__swiper_slider_common_block">
-                                                                <div class="maz__swiper_block_discipline-img">
-                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                                @else
-                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                                @endif
-                                                                <div class="Play-btn">
-                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                        </div>
-                                                                </div>
-                                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                                </div>
-                                                            
-                                                            </div>
-                                                        </div>
-                                                    @php
-                                                }
-                                            }
-                                        @endphp
-                                    </div>
-                                </div>
-                                <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
-                            
-                                <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
-                                                
                                 </div>
                                 <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
                                     <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                                </div>
+                                </div> --}}
                             </div>
                         </div>
                     </div>
-                @else
+                    @elseif($l['level_id'] == 5)
                     <div class="categories_swiper__slider-block">
-                        <div class="container">
-                            <div class="swiper__main_blocks">
-                                <h2 class="mb-3 mb-md-0">{{ $l['level_name'] }} Teaching Videos {{ $l['description'] }}</h2>
-                                <hr>
-                                <div class="swiper bronze_videos mt-4">
-                                    <div class="swiper-wrapper bronze_videos1">
-                                    @if(count($l['videoData']))
-                                        @foreach($l['videoData'] as $insFreeData)
-                                        <div class="swiper-slide">
-                                            <a href="javascript::void(0)" onclick="loginSignupModal()">
-                                                <div class="maz__swiper_slider_common_block">
-                                                    <div class="maz__swiper_block_discipline-img">
-                                                      
-                                                    <img src="{{ str_replace('image_crop_resized=200x120','',$insFreeData['video_thumbnail']) ?? '' }}"  alt="{{ $insFreeData['title'] ?? '' }}">
-                                                        {{--<img src="{{ $insFreeData['video_thumbnail'] }}"  alt="{{ $insFreeData['title'] }}">--}}
-                                                        <div class="Play-btn">
-                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                        </div>
-                                                        <div class="badge-dark-video-time">{{ Carbon\Carbon::parse($insFreeData['video_duration'])->format('i:s'); }}</div>
-                                                    </div>
-                                                    <div class="maz__swiper_block_discipline-content pb-2">
-                                                        <h6 style="font-weight:600;">{{ $insFreeData['title'] }}</h6>
-                                                        <!-- <div class="logo-background">
-                                                            <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                                        </div> -->
-                                                    {{--<p class="description">{{ $insBronzeData['description'] }}</p>--}}
-                                                    </div>
-                                                    {{--<div class="swiper_block_discipline__profile-box">
-                                                        <div class="badge-icons">
-                                                            <img src="{{ asset('assets/front/images/medal.svg') }}"  alt="icon group">
-                                                            <span>Bronze</span>
-                                                        </div>
-                                                        <div class="badge-icons">
-                                                            <img src="{{ asset('assets/front/images/video.svg') }}"  alt="icon group">
-                                                            <span>123</span>
-                                                        </div>
-                                                        <div class="badge-icons">
-                                                            <img src="{{ asset('assets/front/images/belt.svg') }}"  alt="icon group">
-                                                        </div>
-                                                    </div>--}}
-                                                </div>
-                                            </a>    
-                                        </div>
-                                        @endforeach
-                                        @endif
-                                        @php
-                                            $free_count = count($l['videoData']);
-                                            if($free_count == 0)
-                                            {
-                                                for($a = 0;$a < 8;$a++)
-                                                {
-                                                    @endphp
-                                                        <div class="swiper-slide">
-                                                        
-                                                                <div class="maz__swiper_slider_common_block">
-                                                                    <div class="maz__swiper_block_discipline-img">
-                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                                    @else
-                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                                    @endif
-                                                                        <div class="Play-btn">
-                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="maz__swiper_block_discipline-content pb-2">
-                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                                    </div>
-                                                                
-                                                                </div>
-                                                            
-                                                        </div>
-                                                    @php
-                                                }
-                                            }
-
-                                            if($free_count == 1)
-                                            {
-                                                for($a = 0;$a < 7;$a++)
-                                                {
-                                                    @endphp
-                                                        <div class="swiper-slide">
-                                                            <div class="maz__swiper_slider_common_block">
-                                                                <div class="maz__swiper_block_discipline-img">
-                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                                @else
-                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                                @endif
-                                                                <div class="Play-btn">
-                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                        </div>
-                                                                </div>
-                                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                                </div>
-                                                            
-                                                            </div>
-                                                        </div>
-                                                    @php
-                                                }
-                                            }
-
-                                            if($free_count == 2)
-                                            {
-                                                for($a = 0;$a < 6;$a++)
-                                                {
-                                                    @endphp
-                                                        <div class="swiper-slide">
-                                                            <div class="maz__swiper_slider_common_block">
-                                                                <div class="maz__swiper_block_discipline-img">
-                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                                @else
-                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                                @endif
-                                                                <div class="Play-btn">
-                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                        </div>
-                                                                </div>
-                                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                                </div>
-                                                            
-                                                            </div>
-                                                        </div>
-                                                    @php
-                                                }
-                                            }
-
-                                            if($free_count == 3)
-                                            {
-                                                for($a = 0;$a < 5;$a++)
-                                                {
-                                                    @endphp
-                                                        <div class="swiper-slide">
-                                                            <div class="maz__swiper_slider_common_block">
-                                                                <div class="maz__swiper_block_discipline-img">
-                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                                @else
-                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                                @endif
-                                                                <div class="Play-btn">
-                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                        </div>
-                                                                </div>
-                                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                                </div>
-                                                            
-                                                            </div>
-                                                        </div>
-                                                    @php
-                                                }
-                                            }
-
-                                            if($free_count == 4)
-                                            {
-                                                for($a = 0;$a < 4;$a++)
-                                                {
-                                                    @endphp
-                                                        <div class="swiper-slide">
-                                                            <div class="maz__swiper_slider_common_block">
-                                                                <div class="maz__swiper_block_discipline-img">
-                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                                @else
-                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                                @endif
-                                                                <div class="Play-btn">
-                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                        </div>
-                                                                </div>
-                                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                                </div>
-                                                            
-                                                            </div>
-                                                        </div>
-                                                    @php
-                                                }
-                                            }
-
-                                            if($free_count == 5)
-                                            {
-                                                for($a = 0;$a < 3;$a++)
-                                                {
-                                                    @endphp
-                                                        <div class="swiper-slide">
-                                                            <div class="maz__swiper_slider_common_block">
-                                                                <div class="maz__swiper_block_discipline-img">
-                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                                @else
-                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                                @endif
-                                                                <div class="Play-btn">
-                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                        </div>
-                                                                </div>
-                                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                                </div>
-                                                            
-                                                            </div>
-                                                        </div>
-                                                    @php
-                                                }
-                                            }
-
-                                            if($free_count == 6)
-                                            {
-                                                for($a = 0;$a < 2;$a++)
-                                                {
-                                                    @endphp
-                                                        <div class="swiper-slide">
-                                                            <div class="maz__swiper_slider_common_block">
-                                                                <div class="maz__swiper_block_discipline-img">
-                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                                @else
-                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                                @endif
-                                                                <div class="Play-btn">
-                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                        </div>
-                                                                </div>
-                                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                                </div>
-                                                            
-                                                            </div>
-                                                        </div>
-                                                    @php
-                                                }
-                                            }
-
-                                            if($free_count == 7)
-                                            {
-                                                for($a = 0;$a < 1;$a++)
-                                                {
-                                                    @endphp
-                                                        <div class="swiper-slide">
-                                                            <div class="maz__swiper_slider_common_block">
-                                                                <div class="maz__swiper_block_discipline-img">
-                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                                @else
-                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                                @endif
-                                                                <div class="Play-btn">
-                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                        </div>
-                                                                </div>
-                                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                                </div>
-                                                            
-                                                            </div>
-                                                        </div>
-                                                    @php
-                                                }
-                                            }
-                                        @endphp
-                                    </div>
-                                </div>
-                                <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
-                            
-                                <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
-                                                
-                                </div>
-                                <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
-                                    <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!--Bronze classes static -->
-                    <div class="categories_swiper__slider-block">
-                        <div class="container">
-                            <div class="swiper__main_blocks">
-                                <h2 class="mb-3 mb-md-0">{{ $l['level_name'] }} Classes {{ $l['description'] }}</h2>
-                                <hr>
-                                <div class="swiper bronze_videos mt-4">
-                                    <div class="swiper-wrapper bronze_videos1">
-                                        @if(count($l['classData']))
-                                            @foreach($l['classData'] as $insFreeData)
+                            <div class="container">
+                                <div class="swiper__main_blocks">
+                                    <h2 class="mb-3 mb-md-0">{{ $l['level_name'] }} For You</h2>
+                                    <hr>
+                                    <div class="swiper custom-swiper{{ $classId }} bronze_videos_ mt-4">
+                                        <div class="swiper-wrapper bronze_videos1">
+                                        @if(count($l['videoData']))
+                                            @foreach($l['videoData'] as $insFreeData)
                                             <div class="swiper-slide">
-                                                <a href="{{ route('ourClassDetail',$insFreeData['class_id']) }}">
+                                                <a href="javascript::void(0)" onclick="loginSignupModal()">
                                                     <div class="maz__swiper_slider_common_block">
                                                         <div class="maz__swiper_block_discipline-img">
-                                                            <img src="{{ str_replace('image_crop_resized=200x120','',$insFreeData['video_thumbnail']) ?? '' }}"  alt="{{ $insFreeData['class_name'] }}">
+                                                        
+                                                        <img src="{{ str_replace('image_crop_resized=200x120','',$insFreeData['video_thumbnail']) ?? '' }}"  alt="{{ $insFreeData['title'] ?? '' }}">
+                                                            {{--<img src="{{ $insFreeData['video_thumbnail'] }}"  alt="{{ $insFreeData['title'] }}">--}}
                                                             <div class="Play-btn">
                                                                 <i class="fa-regular fa-circle-play fa-2xl"></i>
                                                             </div>
-                                                            {{--<div class="badge-dark-video-time">{{ Carbon\Carbon::parse($insFreeData['video_duration'])->format('i:s'); }}</div>--}}
+                                                            <div class="badge-dark-video-time">{{ Carbon\Carbon::parse($insFreeData['video_duration'])->format('i:s'); }}</div>
                                                         </div>
                                                         <div class="maz__swiper_block_discipline-content pb-2">
-                                                            <h6 style="font-weight:600;">{{ $insFreeData['class_name'] }}</h6>
+                                                            <h6 style="font-weight:600;">{{ $insFreeData['title'] }}</h6>
                                                             <!-- <div class="logo-background">
                                                                 <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
                                                             </div> -->
@@ -3733,16 +3291,45 @@
                                                 </a>    
                                             </div>
                                             @endforeach
-                                        @endif
-                                        @php
-                                            $free_count = count($l['classData']);
-                                            if($free_count == 0)
-                                            {
-                                                for($a = 0;$a < 8;$a++)
+                                            @endif
+                                            @php
+                                                $free_count = count($l['videoData']);
+                                                if($free_count == 0)
                                                 {
-                                                    @endphp
-                                                        <div class="swiper-slide">
-                                                        
+                                                    for($a = 0;$a < 8;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                            
+                                                                    <div class="maz__swiper_slider_common_block">
+                                                                        <div class="maz__swiper_block_discipline-img">
+                                                                        @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                            <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                        @else
+                                                                            <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                        @endif
+                                                                            <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                                            <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                        </div>
+                                                                    
+                                                                    </div>
+                                                                
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 1)
+                                                {
+                                                    for($a = 0;$a < 7;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
                                                                 <div class="maz__swiper_slider_common_block">
                                                                     <div class="maz__swiper_block_discipline-img">
                                                                     @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
@@ -3750,6 +3337,822 @@
                                                                     @else
                                                                         <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
                                                                     @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 2)
+                                                {
+                                                    for($a = 0;$a < 6;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 3)
+                                                {
+                                                    for($a = 0;$a < 5;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 4)
+                                                {
+                                                    for($a = 0;$a < 4;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 5)
+                                                {
+                                                    for($a = 0;$a < 3;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 6)
+                                                {
+                                                    for($a = 0;$a < 2;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 7)
+                                                {
+                                                    for($a = 0;$a < 1;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+                                            @endphp
+                                        </div>
+                                    </div>
+
+                                    <div class="category-swiper-button-next-{{$classId}} swiper-button-next maz__swiper_btn-next">
+                                        <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                    </div>
+                                    
+                                    <div class="category-swiper-button-prev-{{$classId}} swiper-button-prev maz__swiper_btn-prev">
+                                        <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                    </div>
+                                    {{-- <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
+                                
+                                    <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                                    
+                                    </div>
+                                    <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
+                                        <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                    </div> --}}
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <div class="categories_swiper__slider-block">
+                            <div class="container">
+                                <div class="swiper__main_blocks">
+                                    <h2 class="mb-3 mb-md-0">{{ $l['level_name'] }} Teaching Videos {{ $l['description'] }}</h2>
+                                    <hr>
+                                    <div class="swiper custom-swiper{{ $classId }} bronze_videos_ mt-4">
+                                        <div class="swiper-wrapper bronze_videos1">
+                                        @if(count($l['videoData']))
+                                            @foreach($l['videoData'] as $insFreeData)
+                                            <div class="swiper-slide">
+                                                <a href="javascript::void(0)" onclick="loginSignupModal()">
+                                                    <div class="maz__swiper_slider_common_block">
+                                                        <div class="maz__swiper_block_discipline-img">
+                                                        
+                                                        <img src="{{ str_replace('image_crop_resized=200x120','',$insFreeData['video_thumbnail']) ?? '' }}"  alt="{{ $insFreeData['title'] ?? '' }}">
+                                                            {{--<img src="{{ $insFreeData['video_thumbnail'] }}"  alt="{{ $insFreeData['title'] }}">--}}
+                                                            <div class="Play-btn">
+                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                            </div>
+                                                            <div class="badge-dark-video-time">{{ Carbon\Carbon::parse($insFreeData['video_duration'])->format('i:s'); }}</div>
+                                                        </div>
+                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                            <h6 style="font-weight:600;">{{ $insFreeData['title'] }}</h6>
+                                                            <!-- <div class="logo-background">
+                                                                <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
+                                                            </div> -->
+                                                        {{--<p class="description">{{ $insBronzeData['description'] }}</p>--}}
+                                                        </div>
+                                                        {{--<div class="swiper_block_discipline__profile-box">
+                                                            <div class="badge-icons">
+                                                                <img src="{{ asset('assets/front/images/medal.svg') }}"  alt="icon group">
+                                                                <span>Bronze</span>
+                                                            </div>
+                                                            <div class="badge-icons">
+                                                                <img src="{{ asset('assets/front/images/video.svg') }}"  alt="icon group">
+                                                                <span>123</span>
+                                                            </div>
+                                                            <div class="badge-icons">
+                                                                <img src="{{ asset('assets/front/images/belt.svg') }}"  alt="icon group">
+                                                            </div>
+                                                        </div>--}}
+                                                    </div>
+                                                </a>    
+                                            </div>
+                                            @endforeach
+                                            @endif
+                                            @php
+                                                $free_count = count($l['videoData']);
+                                                if($free_count == 0)
+                                                {
+                                                    for($a = 0;$a < 8;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                            
+                                                                    <div class="maz__swiper_slider_common_block">
+                                                                        <div class="maz__swiper_block_discipline-img">
+                                                                        @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                            <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                        @else
+                                                                            <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                        @endif
+                                                                            <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                                            <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                        </div>
+                                                                    
+                                                                    </div>
+                                                                
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 1)
+                                                {
+                                                    for($a = 0;$a < 7;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 2)
+                                                {
+                                                    for($a = 0;$a < 6;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 3)
+                                                {
+                                                    for($a = 0;$a < 5;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 4)
+                                                {
+                                                    for($a = 0;$a < 4;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 5)
+                                                {
+                                                    for($a = 0;$a < 3;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 6)
+                                                {
+                                                    for($a = 0;$a < 2;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 7)
+                                                {
+                                                    for($a = 0;$a < 1;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+                                            @endphp
+                                        </div>
+                                    </div>
+
+                                    <div class="category-swiper-button-next-{{$classId}} swiper-button-next maz__swiper_btn-next">
+                                        <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                    </div>
+                                    
+                                    <div class="category-swiper-button-prev-{{$classId}} swiper-button-prev maz__swiper_btn-prev">
+                                        <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                    </div>
+
+                                    {{-- <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
+                                
+                                    <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                                    
+                                    </div>
+                                    <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
+                                        <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                    </div> --}}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!--Bronze classes static -->
+                        <div class="categories_swiper__slider-block">
+                            <div class="container">
+                                <div class="swiper__main_blocks">
+                                    <h2 class="mb-3 mb-md-0">{{ $l['level_name'] }} Classes {{ $l['description'] }}</h2>
+                                    <hr>
+                                    <div class="swiper custom-swiper{{ $classId }} bronze_videos_ mt-4">
+                                        <div class="swiper-wrapper bronze_videos1">
+                                            @if(count($l['classData']))
+                                                @foreach($l['classData'] as $insFreeData)
+                                                <div class="swiper-slide">
+                                                    <a href="{{ route('ourClassDetail',$insFreeData['class_id']) }}">
+                                                        <div class="maz__swiper_slider_common_block">
+                                                            <div class="maz__swiper_block_discipline-img">
+                                                                <img src="{{ str_replace('image_crop_resized=200x120','',$insFreeData['video_thumbnail']) ?? '' }}"  alt="{{ $insFreeData['class_name'] }}">
+                                                                <div class="Play-btn">
+                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                </div>
+                                                                {{--<div class="badge-dark-video-time">{{ Carbon\Carbon::parse($insFreeData['video_duration'])->format('i:s'); }}</div>--}}
+                                                            </div>
+                                                            <div class="maz__swiper_block_discipline-content pb-2">
+                                                                <h6 style="font-weight:600;">{{ $insFreeData['class_name'] }}</h6>
+                                                                <!-- <div class="logo-background">
+                                                                    <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
+                                                                </div> -->
+                                                            {{--<p class="description">{{ $insBronzeData['description'] }}</p>--}}
+                                                            </div>
+                                                            {{--<div class="swiper_block_discipline__profile-box">
+                                                                <div class="badge-icons">
+                                                                    <img src="{{ asset('assets/front/images/medal.svg') }}"  alt="icon group">
+                                                                    <span>Bronze</span>
+                                                                </div>
+                                                                <div class="badge-icons">
+                                                                    <img src="{{ asset('assets/front/images/video.svg') }}"  alt="icon group">
+                                                                    <span>123</span>
+                                                                </div>
+                                                                <div class="badge-icons">
+                                                                    <img src="{{ asset('assets/front/images/belt.svg') }}"  alt="icon group">
+                                                                </div>
+                                                            </div>--}}
+                                                        </div>
+                                                    </a>    
+                                                </div>
+                                                @endforeach
+                                            @endif
+                                            @php
+                                                $free_count = count($l['classData']);
+                                                if($free_count == 0)
+                                                {
+                                                    for($a = 0;$a < 8;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                            
+                                                                    <div class="maz__swiper_slider_common_block">
+                                                                        <div class="maz__swiper_block_discipline-img">
+                                                                        @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                            <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                        @else
+                                                                            <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                        @endif
+                                                                            <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                                            <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                        </div>
+                                                                    
+                                                                    </div>
+                                                                
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 1)
+                                                {
+                                                    for($a = 0;$a < 7;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 2)
+                                                {
+                                                    for($a = 0;$a < 6;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 3)
+                                                {
+                                                    for($a = 0;$a < 5;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 4)
+                                                {
+                                                    for($a = 0;$a < 4;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 5)
+                                                {
+                                                    for($a = 0;$a < 3;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 6)
+                                                {
+                                                    for($a = 0;$a < 2;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 7)
+                                                {
+                                                    for($a = 0;$a < 1;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+                                            @endphp
+                                        </div>
+                                    </div>
+                                    {{-- <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
+                                        <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                    </div>
+                                    <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
+                                        <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                    </div> --}}
+                                    <div class="category-swiper-button-next-{{$classId}} swiper-button-next maz__swiper_btn-next">
+                                        <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                    </div>
+                                    
+                                    <div class="category-swiper-button-prev-{{$classId}} swiper-button-prev maz__swiper_btn-prev">
+                                        <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!--End Bronze classes static -->
+
+                        <!--Bronze Beltification static -->
+                        <div class="categories_swiper__slider-block">
+                            <div class="container">
+                                <div class="swiper__main_blocks">
+                                    <h2 class="mb-3 mb-md-0">{{ $l['level_name'] }} Beltification<sup style="top: -1rem;font-size: 11px;">TM</sup> Videos {{ $l['description'] }}</h2>
+                                    <hr>
+                                    <div class="swiper custom-swiper{{ $classId }} bronze_videos_ mt-4">
+                                        <div class="swiper-wrapper bronze_videos1">
+                                            @php
+                                                for($a = 0;$a < 8;$a++)
+                                                {
+                                                    @endphp
+                                                        <div class="swiper-slide">
+                                                        
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                        @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                                <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                            @else
+                                                                                <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                            @endif
                                                                         <div class="Play-btn">
                                                                             <i class="fa-regular fa-circle-play fa-2xl"></i>
                                                                         </div>
@@ -3758,1555 +4161,1300 @@
                                                                         <h6 style="font-weight:600;">Coming Soon</h6>
 
                                                                     </div>
-                                                                
+                                                                    <!-- <div class="logo-background">
+                                                                    <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
+                                                                </div> -->
                                                                 </div>
                                                             
                                                         </div>
                                                     @php
                                                 }
-                                            }
-
-                                            if($free_count == 1)
-                                            {
-                                                for($a = 0;$a < 7;$a++)
-                                                {
-                                                    @endphp
-                                                        <div class="swiper-slide">
-                                                            <div class="maz__swiper_slider_common_block">
-                                                                <div class="maz__swiper_block_discipline-img">
-                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                                @else
-                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                                @endif
-                                                                <div class="Play-btn">
-                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                        </div>
-                                                                </div>
-                                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                                </div>
-                                                            
-                                                            </div>
-                                                        </div>
-                                                    @php
-                                                }
-                                            }
-
-                                            if($free_count == 2)
-                                            {
-                                                for($a = 0;$a < 6;$a++)
-                                                {
-                                                    @endphp
-                                                        <div class="swiper-slide">
-                                                            <div class="maz__swiper_slider_common_block">
-                                                                <div class="maz__swiper_block_discipline-img">
-                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                                @else
-                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                                @endif
-                                                                <div class="Play-btn">
-                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                        </div>
-                                                                </div>
-                                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                                </div>
-                                                            
-                                                            </div>
-                                                        </div>
-                                                    @php
-                                                }
-                                            }
-
-                                            if($free_count == 3)
-                                            {
-                                                for($a = 0;$a < 5;$a++)
-                                                {
-                                                    @endphp
-                                                        <div class="swiper-slide">
-                                                            <div class="maz__swiper_slider_common_block">
-                                                                <div class="maz__swiper_block_discipline-img">
-                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                                @else
-                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                                @endif
-                                                                <div class="Play-btn">
-                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                        </div>
-                                                                </div>
-                                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                                </div>
-                                                            
-                                                            </div>
-                                                        </div>
-                                                    @php
-                                                }
-                                            }
-
-                                            if($free_count == 4)
-                                            {
-                                                for($a = 0;$a < 4;$a++)
-                                                {
-                                                    @endphp
-                                                        <div class="swiper-slide">
-                                                            <div class="maz__swiper_slider_common_block">
-                                                                <div class="maz__swiper_block_discipline-img">
-                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                                @else
-                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                                @endif
-                                                                <div class="Play-btn">
-                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                        </div>
-                                                                </div>
-                                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                                </div>
-                                                            
-                                                            </div>
-                                                        </div>
-                                                    @php
-                                                }
-                                            }
-
-                                            if($free_count == 5)
-                                            {
-                                                for($a = 0;$a < 3;$a++)
-                                                {
-                                                    @endphp
-                                                        <div class="swiper-slide">
-                                                            <div class="maz__swiper_slider_common_block">
-                                                                <div class="maz__swiper_block_discipline-img">
-                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                                @else
-                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                                @endif
-                                                                <div class="Play-btn">
-                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                        </div>
-                                                                </div>
-                                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                                </div>
-                                                            
-                                                            </div>
-                                                        </div>
-                                                    @php
-                                                }
-                                            }
-
-                                            if($free_count == 6)
-                                            {
-                                                for($a = 0;$a < 2;$a++)
-                                                {
-                                                    @endphp
-                                                        <div class="swiper-slide">
-                                                            <div class="maz__swiper_slider_common_block">
-                                                                <div class="maz__swiper_block_discipline-img">
-                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                                @else
-                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                                @endif
-                                                                <div class="Play-btn">
-                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                        </div>
-                                                                </div>
-                                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                                </div>
-                                                            
-                                                            </div>
-                                                        </div>
-                                                    @php
-                                                }
-                                            }
-
-                                            if($free_count == 7)
-                                            {
-                                                for($a = 0;$a < 1;$a++)
-                                                {
-                                                    @endphp
-                                                        <div class="swiper-slide">
-                                                            <div class="maz__swiper_slider_common_block">
-                                                                <div class="maz__swiper_block_discipline-img">
-                                                                @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
-                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
-                                                                @else
-                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                                @endif
-                                                                <div class="Play-btn">
-                                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                        </div>
-                                                                </div>
-                                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                                </div>
-                                                            
-                                                            </div>
-                                                        </div>
-                                                    @php
-                                                }
-                                            }
-                                        @endphp
+                                            @endphp
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
-                                    <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
-                                </div>
-                                <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
-                                    <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                    {{-- <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
+                                        <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                    </div>
+                                    <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
+                                        <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                    </div> --}}
+                                    <div class="category-swiper-button-next-{{$classId}} swiper-button-next maz__swiper_btn-next">
+                                        <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                    </div>
+                                    
+                                    <div class="category-swiper-button-prev-{{$classId}} swiper-button-prev maz__swiper_btn-prev">
+                                        <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <!--End Bronze classes static -->
-
-                    <!--Bronze Beltification static -->
-                    <div class="categories_swiper__slider-block">
-                        <div class="container">
-                            <div class="swiper__main_blocks">
-                                <h2 class="mb-3 mb-md-0">{{ $l['level_name'] }} Beltification<sup style="top: -1rem;font-size: 11px;">TM</sup> Videos {{ $l['description'] }}</h2>
-                                <hr>
-                                <div class="swiper bronze_videos mt-4">
-                                    <div class="swiper-wrapper bronze_videos1">
-                                        @php
-                                            for($a = 0;$a < 8;$a++)
-                                            {
-                                                @endphp
-                                                    <div class="swiper-slide">
-                                                    
-                                                            <div class="maz__swiper_slider_common_block">
-                                                                <div class="maz__swiper_block_discipline-img">
-                                                                      @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                        <!--End Bronze Beltification static -->                          
+                    @endif
+                @else
+                    <div class="load-more-school-content" style="display: none;">
+                        @if($l['level_id'] == 1)
+                        <div class="categories_swiper__slider-block">
+                            <div class="container">
+                                <div class="swiper__main_blocks">
+                                    <h2 class="mb-3 mb-md-0">{{ $l['level_name'] }} Videos</h2>
+                                    <hr>
+                                    <div class="swiper swiper-within-custom-swiper{{ $class_within_id }} bronze_videos_ mt-4">
+                                        <div class="swiper-wrapper bronze_videos1">
+                                        @if(count($l['videoData']))
+                                            @foreach($l['videoData'] as $insFreeData)
+                                            <div class="swiper-slide">
+                                                <a href="javascript::void(0)" onclick="loginSignupModal()">
+                                                    <div class="maz__swiper_slider_common_block">
+                                                        <div class="maz__swiper_block_discipline-img">
+                                                
+                                                        <img src="{{ str_replace('image_crop_resized=200x120','',$insFreeData['video_thumbnail']) ?? '' }}"  alt="{{ $insFreeData['title'] ?? '' }}">
+                                                            {{--<img src="{{ $insFreeData['video_thumbnail'] }}"  alt="{{ $insFreeData['title'] }}">--}}
+                                                            <div class="Play-btn">
+                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                            </div>
+                                                            <div class="badge-dark-video-time">{{ Carbon\Carbon::parse($insFreeData['video_duration'])->format('i:s'); }}</div>
+                                                        </div>
+                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                            <h6 style="font-weight:600;">{{ $insFreeData['title'] }}</h6>
+                                                            <!-- <div class="logo-background">
+                                                                <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
+                                                            </div> -->
+                                                        {{--<p class="description">{{ $insBronzeData['description'] }}</p>--}}
+                                                        </div>
+                                                        {{--<div class="swiper_block_discipline__profile-box">
+                                                            <div class="badge-icons">
+                                                                <img src="{{ asset('assets/front/images/medal.svg') }}"  alt="icon group">
+                                                                <span>Bronze</span>
+                                                            </div>
+                                                            <div class="badge-icons">
+                                                                <img src="{{ asset('assets/front/images/video.svg') }}"  alt="icon group">
+                                                                <span>123</span>
+                                                            </div>
+                                                            <div class="badge-icons">
+                                                                <img src="{{ asset('assets/front/images/belt.svg') }}"  alt="icon group">
+                                                            </div>
+                                                        </div>--}}
+                                                    </div>
+                                                </a>    
+                                            </div>
+                                            @endforeach
+                                            @endif
+                                            @php
+                                                $free_count = count($l['videoData']);
+                                                if($free_count == 0)
+                                                {
+                                                    for($a = 0;$a < 8;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                            
+                                                                    <div class="maz__swiper_slider_common_block">
+                                                                        <div class="maz__swiper_block_discipline-img">
+                                                                        @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
                                                                             <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
                                                                         @else
                                                                             <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
                                                                         @endif
+                                                                            <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                                            <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                        </div>
+                                                                    
+                                                                    </div>
+                                                                
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 1)
+                                                {
+                                                    for($a = 0;$a < 7;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 2)
+                                                {
+                                                    for($a = 0;$a < 6;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 3)
+                                                {
+                                                    for($a = 0;$a < 5;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 4)
+                                                {
+                                                    for($a = 0;$a < 4;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 5)
+                                                {
+                                                    for($a = 0;$a < 3;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 6)
+                                                {
+                                                    for($a = 0;$a < 2;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+
+                                                if($free_count == 7)
+                                                {
+                                                    for($a = 0;$a < 1;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                                <div class="maz__swiper_slider_common_block">
+                                                                    <div class="maz__swiper_block_discipline-img">
+                                                                    @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                        <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                    @else
+                                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                    @endif
+                                                                    <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                    </div>
+                                                                    <div class="maz__swiper_block_discipline-content pb-2">
+                                                                        <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                    </div>
+                                                                
+                                                                </div>
+                                                            </div>
+                                                        @php
+                                                    }
+                                                }
+                                            @endphp
+                                        </div>
+                                    </div>
+                                    {{-- <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
+                                    
+                                        <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                                        
+                                    </div>
+                                    <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
+                                        <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                    </div> --}}
+                                    <div class="under-category-swiper-button-next-{{$classId}} swiper-button-next maz__swiper_btn-next">
+                                        <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                    </div>
+                                    
+                                    <div class="under-category-swiper-button-prev-{{$classId}} swiper-button-prev maz__swiper_btn-prev">
+                                        <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                    </div>
+                                </div>
+                            </div>
+                            @php
+                                $class_within_id++;
+                            @endphp
+                        </div>
+                        @elseif($l['level_id'] == 5)
+                        <div class="categories_swiper__slider-block">
+                                <div class="container">
+                                    <div class="swiper__main_blocks">
+                                        <h2 class="mb-3 mb-md-0">{{ $l['level_name'] }} For You</h2>
+                                        <hr>
+                                        <div class="swiper swiper-within-custom-swiper{{ $class_within_id }} bronze_videos_ mt-4">
+                                            <div class="swiper-wrapper bronze_videos1">
+                                            @if(count($l['videoData']))
+                                                @foreach($l['videoData'] as $insFreeData)
+                                                <div class="swiper-slide">
+                                                    <a href="javascript::void(0)" onclick="loginSignupModal()">
+                                                        <div class="maz__swiper_slider_common_block">
+                                                            <div class="maz__swiper_block_discipline-img">
+                                                            
+                                                            <img src="{{ str_replace('image_crop_resized=200x120','',$insFreeData['video_thumbnail']) ?? '' }}"  alt="{{ $insFreeData['title'] ?? '' }}">
+                                                                {{--<img src="{{ $insFreeData['video_thumbnail'] }}"  alt="{{ $insFreeData['title'] }}">--}}
+                                                                <div class="Play-btn">
+                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                </div>
+                                                                <div class="badge-dark-video-time">{{ Carbon\Carbon::parse($insFreeData['video_duration'])->format('i:s'); }}</div>
+                                                            </div>
+                                                            <div class="maz__swiper_block_discipline-content pb-2">
+                                                                <h6 style="font-weight:600;">{{ $insFreeData['title'] }}</h6>
+                                                                <!-- <div class="logo-background">
+                                                                    <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
+                                                                </div> -->
+                                                            {{--<p class="description">{{ $insBronzeData['description'] }}</p>--}}
+                                                            </div>
+                                                            {{--<div class="swiper_block_discipline__profile-box">
+                                                                <div class="badge-icons">
+                                                                    <img src="{{ asset('assets/front/images/medal.svg') }}"  alt="icon group">
+                                                                    <span>Bronze</span>
+                                                                </div>
+                                                                <div class="badge-icons">
+                                                                    <img src="{{ asset('assets/front/images/video.svg') }}"  alt="icon group">
+                                                                    <span>123</span>
+                                                                </div>
+                                                                <div class="badge-icons">
+                                                                    <img src="{{ asset('assets/front/images/belt.svg') }}"  alt="icon group">
+                                                                </div>
+                                                            </div>--}}
+                                                        </div>
+                                                    </a>    
+                                                </div>
+                                                @endforeach
+                                                @endif
+                                                @php
+                                                    $free_count = count($l['videoData']);
+                                                    if($free_count == 0)
+                                                    {
+                                                        for($a = 0;$a < 8;$a++)
+                                                        {
+                                                            @endphp
+                                                                <div class="swiper-slide">
+                                                                
+                                                                        <div class="maz__swiper_slider_common_block">
+                                                                            <div class="maz__swiper_block_discipline-img">
+                                                                            @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                                <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                            @else
+                                                                                <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                            @endif
+                                                                                <div class="Play-btn">
+                                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="maz__swiper_block_discipline-content pb-2">
+                                                                                <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                            </div>
+                                                                        
+                                                                        </div>
+                                                                    
+                                                                </div>
+                                                            @php
+                                                        }
+                                                    }
+
+                                                    if($free_count == 1)
+                                                    {
+                                                        for($a = 0;$a < 7;$a++)
+                                                        {
+                                                            @endphp
+                                                                <div class="swiper-slide">
+                                                                    <div class="maz__swiper_slider_common_block">
+                                                                        <div class="maz__swiper_block_discipline-img">
+                                                                        @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                            <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                        @else
+                                                                            <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                        @endif
+                                                                        <div class="Play-btn">
+                                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                                </div>
+                                                                        </div>
+                                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                                            <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                        </div>
+                                                                    
+                                                                    </div>
+                                                                </div>
+                                                            @php
+                                                        }
+                                                    }
+
+                                                    if($free_count == 2)
+                                                    {
+                                                        for($a = 0;$a < 6;$a++)
+                                                        {
+                                                            @endphp
+                                                                <div class="swiper-slide">
+                                                                    <div class="maz__swiper_slider_common_block">
+                                                                        <div class="maz__swiper_block_discipline-img">
+                                                                        @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                            <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                        @else
+                                                                            <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                        @endif
+                                                                        <div class="Play-btn">
+                                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                                </div>
+                                                                        </div>
+                                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                                            <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                        </div>
+                                                                    
+                                                                    </div>
+                                                                </div>
+                                                            @php
+                                                        }
+                                                    }
+
+                                                    if($free_count == 3)
+                                                    {
+                                                        for($a = 0;$a < 5;$a++)
+                                                        {
+                                                            @endphp
+                                                                <div class="swiper-slide">
+                                                                    <div class="maz__swiper_slider_common_block">
+                                                                        <div class="maz__swiper_block_discipline-img">
+                                                                        @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                            <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                        @else
+                                                                            <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                        @endif
+                                                                        <div class="Play-btn">
+                                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                                </div>
+                                                                        </div>
+                                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                                            <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                        </div>
+                                                                    
+                                                                    </div>
+                                                                </div>
+                                                            @php
+                                                        }
+                                                    }
+
+                                                    if($free_count == 4)
+                                                    {
+                                                        for($a = 0;$a < 4;$a++)
+                                                        {
+                                                            @endphp
+                                                                <div class="swiper-slide">
+                                                                    <div class="maz__swiper_slider_common_block">
+                                                                        <div class="maz__swiper_block_discipline-img">
+                                                                        @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                            <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                        @else
+                                                                            <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                        @endif
+                                                                        <div class="Play-btn">
+                                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                                </div>
+                                                                        </div>
+                                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                                            <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                        </div>
+                                                                    
+                                                                    </div>
+                                                                </div>
+                                                            @php
+                                                        }
+                                                    }
+
+                                                    if($free_count == 5)
+                                                    {
+                                                        for($a = 0;$a < 3;$a++)
+                                                        {
+                                                            @endphp
+                                                                <div class="swiper-slide">
+                                                                    <div class="maz__swiper_slider_common_block">
+                                                                        <div class="maz__swiper_block_discipline-img">
+                                                                        @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                            <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                        @else
+                                                                            <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                        @endif
+                                                                        <div class="Play-btn">
+                                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                                </div>
+                                                                        </div>
+                                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                                            <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                        </div>
+                                                                    
+                                                                    </div>
+                                                                </div>
+                                                            @php
+                                                        }
+                                                    }
+
+                                                    if($free_count == 6)
+                                                    {
+                                                        for($a = 0;$a < 2;$a++)
+                                                        {
+                                                            @endphp
+                                                                <div class="swiper-slide">
+                                                                    <div class="maz__swiper_slider_common_block">
+                                                                        <div class="maz__swiper_block_discipline-img">
+                                                                        @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                            <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                        @else
+                                                                            <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                        @endif
+                                                                        <div class="Play-btn">
+                                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                                </div>
+                                                                        </div>
+                                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                                            <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                        </div>
+                                                                    
+                                                                    </div>
+                                                                </div>
+                                                            @php
+                                                        }
+                                                    }
+
+                                                    if($free_count == 7)
+                                                    {
+                                                        for($a = 0;$a < 1;$a++)
+                                                        {
+                                                            @endphp
+                                                                <div class="swiper-slide">
+                                                                    <div class="maz__swiper_slider_common_block">
+                                                                        <div class="maz__swiper_block_discipline-img">
+                                                                        @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                            <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                        @else
+                                                                            <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                        @endif
+                                                                        <div class="Play-btn">
+                                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                                </div>
+                                                                        </div>
+                                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                                            <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                        </div>
+                                                                    
+                                                                    </div>
+                                                                </div>
+                                                            @php
+                                                        }
+                                                    }
+                                                @endphp
+                                            </div>
+                                        </div>
+                                        {{-- <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
+                                    
+                                        <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                                        
+                                        </div>
+                                        <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
+                                            <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                        </div> --}}
+                                        <div class="under-category-swiper-button-next-{{$class_within_id}} swiper-button-next maz__swiper_btn-next">
+                                            <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                        </div>
+                                        
+                                        <div class="under-category-swiper-button-prev-{{$class_within_id}} swiper-button-prev maz__swiper_btn-prev">
+                                            <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                        </div>
+                                    </div>
+                                </div>
+                                @php
+                                    $class_within_id++;
+                                @endphp
+                            </div>
+                        @else
+                            <div class="categories_swiper__slider-block">
+                                <div class="container">
+                                    <div class="swiper__main_blocks">
+                                        <h2 class="mb-3 mb-md-0">{{ $l['level_name'] }} Teaching Videos {{ $l['description'] }}</h2>
+                                        <hr>
+                                        <div class="swiper swiper-within-custom-swiper{{ $class_within_id }} bronze_videos_ mt-4">
+                                            <div class="swiper-wrapper bronze_videos1">
+                                            @if(count($l['videoData']))
+                                                @foreach($l['videoData'] as $insFreeData)
+                                                <div class="swiper-slide">
+                                                    <a href="javascript::void(0)" onclick="loginSignupModal()">
+                                                        <div class="maz__swiper_slider_common_block">
+                                                            <div class="maz__swiper_block_discipline-img">
+                                                            
+                                                            <img src="{{ str_replace('image_crop_resized=200x120','',$insFreeData['video_thumbnail']) ?? '' }}"  alt="{{ $insFreeData['title'] ?? '' }}">
+                                                                {{--<img src="{{ $insFreeData['video_thumbnail'] }}"  alt="{{ $insFreeData['title'] }}">--}}
+                                                                <div class="Play-btn">
+                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                </div>
+                                                                <div class="badge-dark-video-time">{{ Carbon\Carbon::parse($insFreeData['video_duration'])->format('i:s'); }}</div>
+                                                            </div>
+                                                            <div class="maz__swiper_block_discipline-content pb-2">
+                                                                <h6 style="font-weight:600;">{{ $insFreeData['title'] }}</h6>
+                                                                <!-- <div class="logo-background">
+                                                                    <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
+                                                                </div> -->
+                                                            {{--<p class="description">{{ $insBronzeData['description'] }}</p>--}}
+                                                            </div>
+                                                            {{--<div class="swiper_block_discipline__profile-box">
+                                                                <div class="badge-icons">
+                                                                    <img src="{{ asset('assets/front/images/medal.svg') }}"  alt="icon group">
+                                                                    <span>Bronze</span>
+                                                                </div>
+                                                                <div class="badge-icons">
+                                                                    <img src="{{ asset('assets/front/images/video.svg') }}"  alt="icon group">
+                                                                    <span>123</span>
+                                                                </div>
+                                                                <div class="badge-icons">
+                                                                    <img src="{{ asset('assets/front/images/belt.svg') }}"  alt="icon group">
+                                                                </div>
+                                                            </div>--}}
+                                                        </div>
+                                                    </a>    
+                                                </div>
+                                                @endforeach
+                                                @endif
+                                                @php
+                                                    $free_count = count($l['videoData']);
+                                                    if($free_count == 0)
+                                                    {
+                                                        for($a = 0;$a < 8;$a++)
+                                                        {
+                                                            @endphp
+                                                                <div class="swiper-slide">
+                                                                
+                                                                        <div class="maz__swiper_slider_common_block">
+                                                                            <div class="maz__swiper_block_discipline-img">
+                                                                            @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                                <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                            @else
+                                                                                <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                            @endif
+                                                                                <div class="Play-btn">
+                                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="maz__swiper_block_discipline-content pb-2">
+                                                                                <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                            </div>
+                                                                        
+                                                                        </div>
+                                                                    
+                                                                </div>
+                                                            @php
+                                                        }
+                                                    }
+
+                                                    if($free_count == 1)
+                                                    {
+                                                        for($a = 0;$a < 7;$a++)
+                                                        {
+                                                            @endphp
+                                                                <div class="swiper-slide">
+                                                                    <div class="maz__swiper_slider_common_block">
+                                                                        <div class="maz__swiper_block_discipline-img">
+                                                                        @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                            <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                        @else
+                                                                            <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                        @endif
+                                                                        <div class="Play-btn">
+                                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                                </div>
+                                                                        </div>
+                                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                                            <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                        </div>
+                                                                    
+                                                                    </div>
+                                                                </div>
+                                                            @php
+                                                        }
+                                                    }
+
+                                                    if($free_count == 2)
+                                                    {
+                                                        for($a = 0;$a < 6;$a++)
+                                                        {
+                                                            @endphp
+                                                                <div class="swiper-slide">
+                                                                    <div class="maz__swiper_slider_common_block">
+                                                                        <div class="maz__swiper_block_discipline-img">
+                                                                        @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                            <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                        @else
+                                                                            <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                        @endif
+                                                                        <div class="Play-btn">
+                                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                                </div>
+                                                                        </div>
+                                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                                            <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                        </div>
+                                                                    
+                                                                    </div>
+                                                                </div>
+                                                            @php
+                                                        }
+                                                    }
+
+                                                    if($free_count == 3)
+                                                    {
+                                                        for($a = 0;$a < 5;$a++)
+                                                        {
+                                                            @endphp
+                                                                <div class="swiper-slide">
+                                                                    <div class="maz__swiper_slider_common_block">
+                                                                        <div class="maz__swiper_block_discipline-img">
+                                                                        @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                            <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                        @else
+                                                                            <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                        @endif
+                                                                        <div class="Play-btn">
+                                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                                </div>
+                                                                        </div>
+                                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                                            <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                        </div>
+                                                                    
+                                                                    </div>
+                                                                </div>
+                                                            @php
+                                                        }
+                                                    }
+
+                                                    if($free_count == 4)
+                                                    {
+                                                        for($a = 0;$a < 4;$a++)
+                                                        {
+                                                            @endphp
+                                                                <div class="swiper-slide">
+                                                                    <div class="maz__swiper_slider_common_block">
+                                                                        <div class="maz__swiper_block_discipline-img">
+                                                                        @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                            <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                        @else
+                                                                            <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                        @endif
+                                                                        <div class="Play-btn">
+                                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                                </div>
+                                                                        </div>
+                                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                                            <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                        </div>
+                                                                    
+                                                                    </div>
+                                                                </div>
+                                                            @php
+                                                        }
+                                                    }
+
+                                                    if($free_count == 5)
+                                                    {
+                                                        for($a = 0;$a < 3;$a++)
+                                                        {
+                                                            @endphp
+                                                                <div class="swiper-slide">
+                                                                    <div class="maz__swiper_slider_common_block">
+                                                                        <div class="maz__swiper_block_discipline-img">
+                                                                        @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                            <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                        @else
+                                                                            <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                        @endif
+                                                                        <div class="Play-btn">
+                                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                                </div>
+                                                                        </div>
+                                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                                            <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                        </div>
+                                                                    
+                                                                    </div>
+                                                                </div>
+                                                            @php
+                                                        }
+                                                    }
+
+                                                    if($free_count == 6)
+                                                    {
+                                                        for($a = 0;$a < 2;$a++)
+                                                        {
+                                                            @endphp
+                                                                <div class="swiper-slide">
+                                                                    <div class="maz__swiper_slider_common_block">
+                                                                        <div class="maz__swiper_block_discipline-img">
+                                                                        @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                            <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                        @else
+                                                                            <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                        @endif
+                                                                        <div class="Play-btn">
+                                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                                </div>
+                                                                        </div>
+                                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                                            <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                        </div>
+                                                                    
+                                                                    </div>
+                                                                </div>
+                                                            @php
+                                                        }
+                                                    }
+
+                                                    if($free_count == 7)
+                                                    {
+                                                        for($a = 0;$a < 1;$a++)
+                                                        {
+                                                            @endphp
+                                                                <div class="swiper-slide">
+                                                                    <div class="maz__swiper_slider_common_block">
+                                                                        <div class="maz__swiper_block_discipline-img">
+                                                                        @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                            <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                        @else
+                                                                            <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                        @endif
+                                                                        <div class="Play-btn">
+                                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                                </div>
+                                                                        </div>
+                                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                                            <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                        </div>
+                                                                    
+                                                                    </div>
+                                                                </div>
+                                                            @php
+                                                        }
+                                                    }
+                                                @endphp
+                                            </div>
+                                        </div>
+                                        {{-- <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
+                                    
+                                        <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                                        
+                                        </div>
+                                        <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
+                                            <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                        </div> --}}
+
+                                        <div class="under-category-swiper-button-next-{{ $class_within_id }} swiper-button-next maz__swiper_btn-next">
+                                            <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                        </div>
+                                        
+                                        <div class="under-category-swiper-button-prev-{{ $class_within_id }} swiper-button-prev maz__swiper_btn-prev">
+                                            <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                        </div>
+                                    </div>
+                                </div>
+                                @php
+                                    $class_within_id++;
+                                @endphp
+                            </div>
+
+                            <!--Bronze classes static -->
+                            <div class="categories_swiper__slider-block">
+                                <div class="container">
+                                    <div class="swiper__main_blocks">
+                                        <h2 class="mb-3 mb-md-0">{{ $l['level_name'] }} Classes {{ $l['description'] }}</h2>
+                                        <hr>
+                                        <div class="swiper swiper-within-custom-swiper{{ $class_within_id }} bronze_videos_ mt-4">
+                                            <div class="swiper-wrapper bronze_videos1">
+                                                @if(count($l['classData']))
+                                                    @foreach($l['classData'] as $insFreeData)
+                                                    <div class="swiper-slide">
+                                                        <a href="{{ route('ourClassDetail',$insFreeData['class_id']) }}">
+                                                            <div class="maz__swiper_slider_common_block">
+                                                                <div class="maz__swiper_block_discipline-img">
+                                                                    <img src="{{ str_replace('image_crop_resized=200x120','',$insFreeData['video_thumbnail']) ?? '' }}"  alt="{{ $insFreeData['class_name'] }}">
                                                                     <div class="Play-btn">
                                                                         <i class="fa-regular fa-circle-play fa-2xl"></i>
                                                                     </div>
+                                                                    {{--<div class="badge-dark-video-time">{{ Carbon\Carbon::parse($insFreeData['video_duration'])->format('i:s'); }}</div>--}}
                                                                 </div>
                                                                 <div class="maz__swiper_block_discipline-content pb-2">
-                                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
+                                                                    <h6 style="font-weight:600;">{{ $insFreeData['class_name'] }}</h6>
+                                                                    <!-- <div class="logo-background">
+                                                                        <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
+                                                                    </div> -->
+                                                                {{--<p class="description">{{ $insBronzeData['description'] }}</p>--}}
                                                                 </div>
-                                                                <!-- <div class="logo-background">
-                                                                <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                                            </div> -->
+                                                                {{--<div class="swiper_block_discipline__profile-box">
+                                                                    <div class="badge-icons">
+                                                                        <img src="{{ asset('assets/front/images/medal.svg') }}"  alt="icon group">
+                                                                        <span>Bronze</span>
+                                                                    </div>
+                                                                    <div class="badge-icons">
+                                                                        <img src="{{ asset('assets/front/images/video.svg') }}"  alt="icon group">
+                                                                        <span>123</span>
+                                                                    </div>
+                                                                    <div class="badge-icons">
+                                                                        <img src="{{ asset('assets/front/images/belt.svg') }}"  alt="icon group">
+                                                                    </div>
+                                                                </div>--}}
                                                             </div>
-                                                        
+                                                        </a>    
                                                     </div>
+                                                    @endforeach
+                                                @endif
                                                 @php
-                                            }
-                                        @endphp
+                                                    $free_count = count($l['classData']);
+                                                    if($free_count == 0)
+                                                    {
+                                                        for($a = 0;$a < 8;$a++)
+                                                        {
+                                                            @endphp
+                                                                <div class="swiper-slide">
+                                                                
+                                                                        <div class="maz__swiper_slider_common_block">
+                                                                            <div class="maz__swiper_block_discipline-img">
+                                                                            @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                                <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                            @else
+                                                                                <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                            @endif
+                                                                                <div class="Play-btn">
+                                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="maz__swiper_block_discipline-content pb-2">
+                                                                                <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                            </div>
+                                                                        
+                                                                        </div>
+                                                                    
+                                                                </div>
+                                                            @php
+                                                        }
+                                                    }
+
+                                                    if($free_count == 1)
+                                                    {
+                                                        for($a = 0;$a < 7;$a++)
+                                                        {
+                                                            @endphp
+                                                                <div class="swiper-slide">
+                                                                    <div class="maz__swiper_slider_common_block">
+                                                                        <div class="maz__swiper_block_discipline-img">
+                                                                        @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                            <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                        @else
+                                                                            <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                        @endif
+                                                                        <div class="Play-btn">
+                                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                                </div>
+                                                                        </div>
+                                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                                            <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                        </div>
+                                                                    
+                                                                    </div>
+                                                                </div>
+                                                            @php
+                                                        }
+                                                    }
+
+                                                    if($free_count == 2)
+                                                    {
+                                                        for($a = 0;$a < 6;$a++)
+                                                        {
+                                                            @endphp
+                                                                <div class="swiper-slide">
+                                                                    <div class="maz__swiper_slider_common_block">
+                                                                        <div class="maz__swiper_block_discipline-img">
+                                                                        @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                            <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                        @else
+                                                                            <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                        @endif
+                                                                        <div class="Play-btn">
+                                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                                </div>
+                                                                        </div>
+                                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                                            <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                        </div>
+                                                                    
+                                                                    </div>
+                                                                </div>
+                                                            @php
+                                                        }
+                                                    }
+
+                                                    if($free_count == 3)
+                                                    {
+                                                        for($a = 0;$a < 5;$a++)
+                                                        {
+                                                            @endphp
+                                                                <div class="swiper-slide">
+                                                                    <div class="maz__swiper_slider_common_block">
+                                                                        <div class="maz__swiper_block_discipline-img">
+                                                                        @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                            <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                        @else
+                                                                            <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                        @endif
+                                                                        <div class="Play-btn">
+                                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                                </div>
+                                                                        </div>
+                                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                                            <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                        </div>
+                                                                    
+                                                                    </div>
+                                                                </div>
+                                                            @php
+                                                        }
+                                                    }
+
+                                                    if($free_count == 4)
+                                                    {
+                                                        for($a = 0;$a < 4;$a++)
+                                                        {
+                                                            @endphp
+                                                                <div class="swiper-slide">
+                                                                    <div class="maz__swiper_slider_common_block">
+                                                                        <div class="maz__swiper_block_discipline-img">
+                                                                        @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                            <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                        @else
+                                                                            <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                        @endif
+                                                                        <div class="Play-btn">
+                                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                                </div>
+                                                                        </div>
+                                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                                            <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                        </div>
+                                                                    
+                                                                    </div>
+                                                                </div>
+                                                            @php
+                                                        }
+                                                    }
+
+                                                    if($free_count == 5)
+                                                    {
+                                                        for($a = 0;$a < 3;$a++)
+                                                        {
+                                                            @endphp
+                                                                <div class="swiper-slide">
+                                                                    <div class="maz__swiper_slider_common_block">
+                                                                        <div class="maz__swiper_block_discipline-img">
+                                                                        @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                            <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                        @else
+                                                                            <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                        @endif
+                                                                        <div class="Play-btn">
+                                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                                </div>
+                                                                        </div>
+                                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                                            <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                        </div>
+                                                                    
+                                                                    </div>
+                                                                </div>
+                                                            @php
+                                                        }
+                                                    }
+
+                                                    if($free_count == 6)
+                                                    {
+                                                        for($a = 0;$a < 2;$a++)
+                                                        {
+                                                            @endphp
+                                                                <div class="swiper-slide">
+                                                                    <div class="maz__swiper_slider_common_block">
+                                                                        <div class="maz__swiper_block_discipline-img">
+                                                                        @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                            <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                        @else
+                                                                            <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                        @endif
+                                                                        <div class="Play-btn">
+                                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                                </div>
+                                                                        </div>
+                                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                                            <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                        </div>
+                                                                    
+                                                                    </div>
+                                                                </div>
+                                                            @php
+                                                        }
+                                                    }
+
+                                                    if($free_count == 7)
+                                                    {
+                                                        for($a = 0;$a < 1;$a++)
+                                                        {
+                                                            @endphp
+                                                                <div class="swiper-slide">
+                                                                    <div class="maz__swiper_slider_common_block">
+                                                                        <div class="maz__swiper_block_discipline-img">
+                                                                        @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                            <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                        @else
+                                                                            <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                        @endif
+                                                                        <div class="Play-btn">
+                                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                                </div>
+                                                                        </div>
+                                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                                            <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                        </div>
+                                                                    
+                                                                    </div>
+                                                                </div>
+                                                            @php
+                                                        }
+                                                    }
+                                                @endphp
+                                            </div>
+                                        </div>
+                                        {{-- <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
+                                            <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                        </div>
+                                        <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
+                                            <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                        </div> --}}
+                                        <div class="under-category-swiper-button-next-{{$class_within_id}} swiper-button-next maz__swiper_btn-next">
+                                            <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                        </div>
+                                        
+                                        <div class="under-category-swiper-button-prev-{{$class_within_id}} swiper-button-prev maz__swiper_btn-prev">
+                                            <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
-                                    <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
-                                </div>
-                                <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
-                                    <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                                </div>
+                                @php
+                                    $class_within_id++;
+                                @endphp
                             </div>
-                        </div>
+                            <!--End Bronze classes static -->
+
+                            <!--Bronze Beltification static -->
+                            <div class="categories_swiper__slider-block">
+                                <div class="container">
+                                    <div class="swiper__main_blocks">
+                                        <h2 class="mb-3 mb-md-0">{{ $l['level_name'] }} Beltification<sup style="top: -1rem;font-size: 11px;">TM</sup> Videos {{ $l['description'] }}</h2>
+                                        <hr>
+                                        <div class="swiper swiper-within-custom-swiper{{ $class_within_id }} bronze_videos_ mt-4">
+                                            <div class="swiper-wrapper bronze_videos1">
+                                                @php
+                                                    for($a = 0;$a < 8;$a++)
+                                                    {
+                                                        @endphp
+                                                            <div class="swiper-slide">
+                                                            
+                                                                    <div class="maz__swiper_slider_common_block">
+                                                                        <div class="maz__swiper_block_discipline-img">
+                                                                            @if(isset($instructorDisciplineDetails->video_coming_soon_image) && !empty($instructorDisciplineDetails->video_coming_soon_image))
+                                                                                    <img src="{{ $instructorDisciplineDetails->video_coming_soon_image }}"  alt="">
+                                                                                @else
+                                                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
+                                                                                @endif
+                                                                            <div class="Play-btn">
+                                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="maz__swiper_block_discipline-content pb-2">
+                                                                            <h6 style="font-weight:600;">Coming Soon</h6>
+
+                                                                        </div>
+                                                                        <!-- <div class="logo-background">
+                                                                        <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
+                                                                    </div> -->
+                                                                    </div>
+                                                                
+                                                            </div>
+                                                        @php
+                                                    }
+                                                @endphp
+                                            </div>
+                                        </div>
+                                        {{-- <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
+                                            <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                        </div>
+                                        <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
+                                            <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                        </div> --}}
+                                        <div class="under-category-swiper-button-next-{{$class_within_id}} swiper-button-next maz__swiper_btn-next">
+                                            <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
+                                        </div>
+                                        
+                                        <div class="under-category-swiper-button-prev-{{$class_within_id}} swiper-button-prev maz__swiper_btn-prev">
+                                            <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
+                                        </div>
+                                    </div>
+                                </div>
+                                @php
+                                    $class_within_id++;
+                                @endphp
+                            </div>
+                            <!--End Bronze Beltification static -->                          
+                        @endif
                     </div>
-                    <!--End Bronze Beltification static -->                          
                 @endif
+                @php
+                    $classId++;   
+                @endphp
             @endforeach
         @endif
     @endauth                       
     <!-- End Dynamic Video Section-->                               
 
-
-
-    {{--<!-- Free Videos -->
-        <div class="categories_swiper__slider-block">
-            <div class="container">
-                <div class="swiper__main_blocks">
-                    <h2 class="text-uppercase mb-3 mb-md-0">Free Videos</h2>
-                    <hr>
-                    <div class="swiper free_videos mt-4">
-                        <div class="swiper-wrapper free_videos1">
-                            @if(count($instructorFreeVideoData))
-                                @foreach($instructorFreeVideoData as $insFreeData)
-                                <div class="swiper-slide">
-                                    <a href="{{ route('playInstructorVideo',['video_id'=>$insFreeData['video_id']]) }}">
-                                        <div class="maz__swiper_slider_common_block">
-                                            <div class="maz__swiper_block_discipline-img">
-                                                <img src="{{ $insFreeData['lession_thumbnail'] }}"  alt="{{ $insFreeData['title'] }}">
-                                                <div class="Play-btn">
-                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                </div>
-                                                
-                                                <div class="badge-dark-video-time">{{ Carbon\Carbon::parse($insFreeData['video_duration'])->format('i:s'); }}</div>
-                                            </div>
-                                            <div class="maz__swiper_block_discipline-content pb-2">
-                                                <h6>{{ $insFreeData['title'] }}</h6>
-                                             <p class="description">{{ $insFreeData['description'] }}</p>
-                                            </div>
-                                            <div class="logo-background">
-                                                <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                            </div>
-                                            <div class="swiper_block_discipline__profile-box">
-                                                <div class="badge-icons">
-                                                    <img src="{{ asset('assets/front/images/medal.svg') }}"  alt="icon group">
-                                                    <span>Bronze</span>
-                                                </div>
-                                                <div class="badge-icons">
-                                                    <img src="{{ asset('assets/front/images/video.svg') }}"  alt="icon group">
-                                                    <span>123</span>
-                                                </div>
-                                                <div class="badge-icons">
-                                                    <img src="{{ asset('assets/front/images/belt.svg') }}"  alt="icon group">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </a>    
-                                </div>
-                                @endforeach
-                            @endif
-                            @php
-                                $free_count = count($instructorFreeVideoData);
-                                if($free_count == 0)
-                                {
-                                    for($k = 0;$k < 4;$k++)
-                                    {
-                                        @endphp
-                                            <div class="swiper-slide">
-                                               
-                                                    <div class="maz__swiper_slider_common_block">
-                                                        <div class="maz__swiper_block_discipline-img">
-                                                            <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                            <div class="Play-btn">
-                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                            </div>
-                                                        </div>
-                                                        <div class="maz__swiper_block_discipline-content pb-2">
-                                                            <h6 style="font-weight:600;">Coming Soon</h6>
-                                                        </div>
-                                                        <!-- <div class="logo-background">
-                                                        <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                                    </div> -->
-                                                    </div>
-                                                
-                                            </div>
-                                        @php
-                                    }
-                                }
-
-                                if($free_count == 1)
-                                {
-                                    for($k = 0;$k < 3;$k++)
-                                    {
-                                        @endphp
-                                            <div class="swiper-slide">
-                                                <div class="maz__swiper_slider_common_block">
-                                                    <div class="maz__swiper_block_discipline-img">
-                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                        <div class="Play-btn">
-                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                        </div>
-                                                    </div>
-                                                    <div class="maz__swiper_block_discipline-content pb-2">
-                                                        <h6 style="font-weight:600;">Coming Soon</h6>
-                                                    </div>
-                                                    <!-- <div class="logo-background">
-                                                        <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                                    </div> -->
-                                                </div>
-                                            </div>
-                                        @php
-                                    }
-                                }
-
-                                if($free_count == 2)
-                                {
-                                    for($k = 0;$k < 2;$k++)
-                                    {
-                                        @endphp
-                                            <div class="swiper-slide">
-                                                <div class="maz__swiper_slider_common_block">
-                                                    <div class="maz__swiper_block_discipline-img">
-                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                        <div class="Play-btn">
-                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                        </div>
-                                                    </div>
-                                                    <div class="maz__swiper_block_discipline-content pb-2">
-                                                        <h6 style="font-weight:600;">Coming Soon</h6>
-                                                    </div>
-                                                    <!-- <div class="logo-background">
-                                                        <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                                    </div> -->
-                                                </div>
-                                            </div>
-                                        @php
-                                    }
-                                }
-
-                                if($free_count == 3)
-                                {
-                                    for($k = 0;$k < 1;$k++)
-                                    {
-                                        @endphp
-                                            <div class="swiper-slide">
-                                                <div class="maz__swiper_slider_common_block">
-                                                    <div class="maz__swiper_block_discipline-img">
-                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                        <div class="Play-btn">
-                                                            <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                        </div>
-                                                    </div>
-                                                    <div class="maz__swiper_block_discipline-content pb-2">
-                                                        <h6 style="font-weight:600;">Coming Soon</h6>
-                                                    </div>
-                                                    <!-- <div class="logo-background">
-                                                        <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                                    </div> -->
-                                                </div>
-                                            </div>
-                                        @php
-                                    }
-                                }
-
-                                
-                            @endphp    
-                        </div>
-                    </div>
-                    @auth
-                    <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
-                        <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
-                    </div>
-                    <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
-                        <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                    </div>
-                    @else       
-                        <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
-                          
-                            <img onclick="redirectto()" src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
-                                             
-                        </div>
-                        <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
-                            <img  onclick="redirectto()" src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                        </div>
-                 
-                    @endauth
-                </div>
-            </div>
-        </div>
-    <!-- Free Videos end -->--}}
-
-   
-    
-    <!-- Teaching Videos Start -->
-       {{--@auth
-        <div class="categories_swiper__slider-block">
-            <div class="container">
-                <div class="swiper__main_blocks">
-                    <h2 class="mb-3 mb-md-0">Bronze Teaching Videos For Beginners</h2>
-                    <hr>
-                    <div class="swiper bronze_videos mt-4">
-                        <div class="swiper-wrapper bronze_videos1">
-                        @if(count($instructorBronzeTeachingVideosData))
-                            @foreach($instructorBronzeTeachingVideosData as $insBronzeData)
-                            <div class="swiper-slide">
-                                <a href="{{ route('playInstructorVideo',['video_id'=>$insBronzeData['video_id'],'call'=>'Teaching']) }}">
-                                    <div class="maz__swiper_slider_common_block">
-                                        <div class="maz__swiper_block_discipline-img">
-                                            <img src="{{ $insBronzeData['video_thumbnail'] }}"  alt="{{ $insBronzeData['title'] }}">
-                                            <div class="Play-btn">
-                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                            </div>
-                                            <div class="badge-dark-video-time">{{ Carbon\Carbon::parse($insBronzeData['video_duration'])->format('i:s'); }}</div>
-                                        </div>
-                                        <div class="maz__swiper_block_discipline-content pb-2">
-                                            <h6>{{ $insBronzeData['title'] }}</h6>
-                                        <p class="description">{{ $insBronzeData['description'] }}</p>
-                                        </div>
-                                        <div class="swiper_block_discipline__profile-box">
-                                            <div class="badge-icons">
-                                                <img src="{{ asset('assets/front/images/medal.svg') }}"  alt="icon group">
-                                                <span>Bronze</span>
-                                            </div>
-                                            <div class="badge-icons">
-                                                <img src="{{ asset('assets/front/images/video.svg') }}"  alt="icon group">
-                                                <span>123</span>
-                                            </div>
-                                            <div class="badge-icons">
-                                                <img src="{{ asset('assets/front/images/belt.svg') }}"  alt="icon group">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </a>    
-                            </div>
-                            @endforeach
-                            @endif
-                            @php
-                                $bronze_count = count($instructorBronzeTeachingVideosData);
-                                if($bronze_count == 0)
-                                {
-                                    for($a = 0;$a < 4;$a++)
-                                    {
-                                        @endphp
-                                            <div class="swiper-slide">
-                                            
-                                                    <div class="maz__swiper_slider_common_block">
-                                                        <div class="maz__swiper_block_discipline-img">
-                                                            <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                            <div class="Play-btn">
-                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                            </div>
-                                                        </div>
-                                                        <div class="maz__swiper_block_discipline-content pb-2">
-                                                            <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                        </div>
-                                                        <!-- <div class="logo-background">
-                                                        <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                                    </div> -->
-                                                    </div>
-                                                
-                                            </div>
-                                        @php
-                                    }
-                                }
-
-                                if($bronze_count == 1)
-                                {
-                                    for($a = 0;$a < 3;$a++)
-                                    {
-                                        @endphp
-                                            <div class="swiper-slide">
-                                                <div class="maz__swiper_slider_common_block">
-                                                    <div class="maz__swiper_block_discipline-img">
-                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                    <div class="Play-btn">
-                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                            </div>
-                                                    </div>
-                                                    <div class="maz__swiper_block_discipline-content pb-2">
-                                                        <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                    </div>
-                                                    <!-- <div class="logo-background">
-                                                        <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                                    </div> -->
-                                                </div>
-                                            </div>
-                                        @php
-                                    }
-                                }
-
-                                if($bronze_count == 2)
-                                {
-                                    for($a = 0;$a < 2;$a++)
-                                    {
-                                        @endphp
-                                            <div class="swiper-slide">
-                                                <div class="maz__swiper_slider_common_block">
-                                                    <div class="maz__swiper_block_discipline-img">
-                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                    <div class="Play-btn">
-                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                            </div>
-                                                    </div>
-                                                    <div class="maz__swiper_block_discipline-content pb-2">
-                                                        <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                    </div>
-                                                    <!-- <div class="logo-background">
-                                                        <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                                    </div> -->
-                                                </div>
-                                            </div>
-                                        @php
-                                    }
-                                }
-
-                                if($bronze_count == 3)
-                                {
-                                    for($a = 0;$a < 1;$a++)
-                                    {
-                                        @endphp
-                                            <div class="swiper-slide">
-                                                <div class="maz__swiper_slider_common_block">
-                                                    <div class="maz__swiper_block_discipline-img">
-                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                    <div class="Play-btn">
-                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                            </div>
-                                                    </div>
-                                                    <div class="maz__swiper_block_discipline-content pb-2">
-                                                        <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                    </div>
-                                                    <!-- <div class="logo-background">
-                                                        <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                                    </div> -->
-                                                </div>
-                                            </div>
-                                        @php
-                                    }
-                                }
-                            @endphp
-                        </div>
-                    </div>
-                    <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
-                        <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
-                    </div>
-                    <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
-                        <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                    </div>
-                </div>
-            </div>
-        </div>
-        @else
-        <a href="{{ route('student.login') }}">
-        <div class="categories_swiper__slider-block">
-            <div class="container">
-                <div class="swiper__main_blocks">
-                    <h2 class="mb-3 mb-md-0">Bronze Teaching Videos For Beginners</h2>
-                    <hr>
-                    <div class="swiper bronze_videos mt-4">
-                        <div class="swiper-wrapper bronze_videos1">
-                        @if(count($instructorBronzeTeachingVideosData))
-                            @foreach($instructorBronzeTeachingVideosData as $insBronzeData)
-                            <div class="swiper-slide">
-                                <a href=" {{ route('student.login') }}">
-                                    <div class="maz__swiper_slider_common_block">
-                                        <div class="maz__swiper_block_discipline-img">
-                                            <img src="{{ $insBronzeData['video_thumbnail'] }}"  alt="{{ $insBronzeData['title'] }}">
-                                            <div class="Play-btn">
-                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                            </div>
-                                            <div class="badge-dark-video-time">{{ Carbon\Carbon::parse($insBronzeData['video_duration'])->format('i:s'); }}</div>
-                                        </div>
-                                        <div class="maz__swiper_block_discipline-content pb-2">
-                                            <h6>{{ $insBronzeData['title'] }}</h6>
-                                        <p class="description">{{ $insBronzeData['description'] }}</p>
-                                        </div>
-                                        <div class="logo-background">
-                                            <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                        </div>
-                                        <div class="swiper_block_discipline__profile-box">
-                                            <div class="badge-icons">
-                                                <img src="{{ asset('assets/front/images/medal.svg') }}"  alt="icon group">
-                                                <span>Bronze</span>
-                                            </div>
-                                            <div class="badge-icons">
-                                                <img src="{{ asset('assets/front/images/video.svg') }}"  alt="icon group">
-                                                <span>123</span>
-                                            </div>
-                                            <div class="badge-icons">
-                                                <img src="{{ asset('assets/front/images/belt.svg') }}"  alt="icon group">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </a>    
-                            </div>
-                            @endforeach
-                            @endif
-                            @php
-                                $bronze_count = count($instructorBronzeTeachingVideosData);
-                                if($bronze_count == 0)
-                                {
-                                    for($a = 0;$a < 4;$a++)
-                                    {
-                                        @endphp
-                                            <div class="swiper-slide">
-                                                <a href=" {{ route('student.login') }}">
-                                                    <div class="maz__swiper_slider_common_block">
-                                                        <div class="maz__swiper_block_discipline-img">
-                                                            <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                            <div class="Play-btn">
-                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                            </div>
-                                                        </div>
-                                                        <div class="maz__swiper_block_discipline-content pb-2">
-                                                            <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                        </div>
-                                                        <!-- <div class="logo-background">
-                                                        <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                                    </div> -->
-                                                    </div>
-                                                </a>
-                                            </div>
-                                        @php
-                                    }
-                                }
-
-                                if($bronze_count == 1)
-                                {
-                                    for($a = 0;$a < 3;$a++)
-                                    {
-                                        @endphp
-                                            <div class="swiper-slide">
-                                                <a href=" {{ route('student.login') }}">
-                                                <div class="maz__swiper_slider_common_block">
-                                                    <div class="maz__swiper_block_discipline-img">
-                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                    <div class="Play-btn">
-                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                            </div>
-                                                    </div>
-                                                    <div class="maz__swiper_block_discipline-content pb-2">
-                                                        <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                    </div>
-                                                    <!-- <div class="logo-background">
-                                                        <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                                    </div> -->
-                                                </div>
-                                                </a>
-                                            </div>
-                                        @php
-                                    }
-                                }
-
-                                if($bronze_count == 2)
-                                {
-                                    for($a = 0;$a < 2;$a++)
-                                    {
-                                        @endphp
-                                            <div class="swiper-slide">
-                                            <a href=" {{ route('student.login') }}">
-                                                <div class="maz__swiper_slider_common_block">
-                                                    <div class="maz__swiper_block_discipline-img">
-                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                    <div class="Play-btn">
-                                                                <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                            </div>
-                                                    </div>
-                                                    <div class="maz__swiper_block_discipline-content pb-2">
-                                                        <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                    </div>
-                                                    <!-- <div class="logo-background">
-                                                        <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                                    </div> -->
-                                                </div>
-                                            </a>    
-                                            </div>
-                                        @php
-                                    }
-                                }
-
-                                if($bronze_count == 3)
-                                {
-                                    for($a = 0;$a < 1;$a++)
-                                    {
-                                        @endphp
-                                            <div class="swiper-slide">
-                                                <a href=" {{ route('student.login') }}">
-                                                    <div class="maz__swiper_slider_common_block">
-                                                        <div class="maz__swiper_block_discipline-img">
-                                                        <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                        <div class="Play-btn">
-                                                                    <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                                </div>
-                                                        </div>
-                                                        <div class="maz__swiper_block_discipline-content pb-2">
-                                                            <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                        </div>
-                                                        <!-- <div class="logo-background">
-                                                            <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                                        </div> -->
-                                                    </div>
-                                                </a>    
-                                            </div>
-                                        @php
-                                    }
-                                }
-                            @endphp
-                        </div>
-                    </div>
-                    @auth
-                    <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
-                        <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
-                    </div>
-                    <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
-                        <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                    </div>
-                    @else
-                    <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
-                        <img onclick="redirectto()" src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
-                    </div>
-                    <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
-                        <img onclick="redirectto()" src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                    </div>
-                    @endauth
-                </div>
-            </div>
-        </div>
-        </a>
-        @endauth--}}
-    <!-- Teaching Videos end -->   
-    
-   {{--@auth
-    <div class="categories_swiper__slider-block">
-        <div class="container">
-            <div class="swiper__main_blocks">
-                <h2 class="mb-3 mb-md-0">Bronze Classes For Beginners</h2>
-                <hr>
-                <div class="swiper bronze_videos mt-4">
-                    <div class="swiper-wrapper bronze_videos1">
-                        @php
-                            for($a = 0;$a < 4;$a++)
-                            {
-                                @endphp
-                                    <div class="swiper-slide">
-                                    
-                                            <div class="maz__swiper_slider_common_block">
-                                                <div class="maz__swiper_block_discipline-img">
-                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                    <div class="Play-btn">
-                                                        <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                </div>
-                                                <!-- <div class="logo-background">
-                                                <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                            </div> -->
-                                            </div>
-                                        
-                                    </div>
-                                @php
-                            }
-                        @endphp
-                    </div>
-                </div>
-                <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
-                    <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
-                </div>
-                <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
-                    <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                </div>
-            </div>
-        </div>
-    </div>
-    @else
-    <div class="categories_swiper__slider-block">
-        <div class="container">
-            <div class="swiper__main_blocks">
-                <h2 class="mb-3 mb-md-0">Bronze Classes Videos For Beginners</h2>
-                <hr>
-                <div class="swiper bronze_videos mt-4">
-                    <div class="swiper-wrapper bronze_videos1">
-                        @php
-                            for($a = 0;$a < 4;$a++)
-                            {
-                                @endphp
-                                    <div class="swiper-slide">
-                                        <a href="{{ route('student.login') }}">
-                                            <div class="maz__swiper_slider_common_block">
-                                                <div class="maz__swiper_block_discipline-img">
-                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                    <div class="Play-btn">
-                                                        <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                </div>
-                                                <!-- <div class="logo-background">
-                                                <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                            </div> -->
-                                            </div>
-                                        </a>
-                                    </div>
-                                @php
-                            }
-                        @endphp
-                    </div>
-                </div>
-                @auth
-                <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
-                    <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
-                </div>
-                <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
-                    <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                </div>
-                @else
-                <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
-                    <img onclick="redirectto()" src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
-                </div>
-                <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
-                    <img onclick="redirectto()" src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                </div>
-                @endauth
-            </div>
-        </div>
-    </div>
-    @endauth
-    
-    @auth
-    <div class="categories_swiper__slider-block">
-        <div class="container">
-            <div class="swiper__main_blocks">
-                <h2 class="mb-3 mb-md-0">Bronze Beltification<sup style="top: -1rem;font-size: 11px;">TM</sup> Videos For Beginners</h2>
-                <hr>
-                <div class="swiper bronze_videos mt-4">
-                    <div class="swiper-wrapper bronze_videos1">
-                        @php
-                            for($a = 0;$a < 4;$a++)
-                            {
-                                @endphp
-                                    <div class="swiper-slide">
-                                    
-                                            <div class="maz__swiper_slider_common_block">
-                                                <div class="maz__swiper_block_discipline-img">
-                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                    <div class="Play-btn">
-                                                        <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                </div>
-                                                <!-- <div class="logo-background">
-                                                <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                            </div> -->
-                                            </div>
-                                        
-                                    </div>
-                                @php
-                            }
-                        @endphp
-                    </div>
-                </div>
-                <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
-                    <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
-                </div>
-                <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
-                    <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                </div>
-            </div>
-        </div>
-    </div>
-    @else
-    <div class="categories_swiper__slider-block">
-        <div class="container">
-            <div class="swiper__main_blocks">
-                <h2 class="mb-3 mb-md-0">Bronze Beltification<sup style="top: -1rem;font-size: 11px;">TM</sup> Videos For Beginners</h2>
-                <hr>
-                <div class="swiper bronze_videos mt-4">
-                    <div class="swiper-wrapper bronze_videos1">
-                        @php
-                            for($a = 0;$a < 4;$a++)
-                            {
-                                @endphp
-                                    <div class="swiper-slide">
-                                        <a href="{{ route('student.login') }}">
-                                            <div class="maz__swiper_slider_common_block">
-                                                <div class="maz__swiper_block_discipline-img">
-                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                    <div class="Play-btn">
-                                                        <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                </div>
-                                                <!-- <div class="logo-background">
-                                                <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                            </div> -->
-                                            </div>
-                                        </a>
-                                    </div>
-                                @php
-                            }
-                        @endphp
-                    </div>
-                </div>
-                <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
-                    <img onclick="redirectto()" src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
-                </div>
-                <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
-                    <img onclick="redirectto()" src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                </div>
-
-            </div>
-        </div>
-    </div>
-    @endauth 
-    
-    @auth
-    <div class="categories_swiper__slider-block">
-        <div class="container">
-            <div class="swiper__main_blocks">
-                <h2 class="mb-3 mb-md-0">Silver Teaching Videos For Intermediaters</h2>
-                <hr>
-                <div class="swiper bronze_videos mt-4">
-                    <div class="swiper-wrapper bronze_videos1">
-                        @php
-                            for($a = 0;$a < 4;$a++)
-                            {
-                                @endphp
-                                    <div class="swiper-slide">
-                                    
-                                            <div class="maz__swiper_slider_common_block">
-                                                <div class="maz__swiper_block_discipline-img">
-                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                    <div class="Play-btn">
-                                                        <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                </div>
-                                                <!-- <div class="logo-background">
-                                                <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                            </div> -->
-                                            </div>
-                                        
-                                    </div>
-                                @php
-                            }
-                        @endphp
-                    </div>
-                </div>
-                <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
-                    <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
-                </div>
-                <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
-                    <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                </div>
-            </div>
-        </div>
-    </div>
-    @else
-    <div class="categories_swiper__slider-block">
-        <div class="container">
-            <div class="swiper__main_blocks">
-                <h2 class="mb-3 mb-md-0">Silver Teaching Videos For Intermediaters</h2>
-                <hr>
-                <div class="swiper bronze_videos mt-4">
-                    <div class="swiper-wrapper bronze_videos1">
-                        @php
-                            for($a = 0;$a < 4;$a++)
-                            {
-                                @endphp
-                                    <div class="swiper-slide">
-                                        <a href="{{ route('student.login') }}">
-                                            <div class="maz__swiper_slider_common_block">
-                                                <div class="maz__swiper_block_discipline-img">
-                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                    <div class="Play-btn">
-                                                        <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                </div>
-                                                <!-- <div class="logo-background">
-                                                <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                            </div> -->
-                                            </div>
-                                        </a>
-                                    </div>
-                                @php
-                            }
-                        @endphp
-                    </div>
-                </div>
-                <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
-                    <img onclick="redirectto()" src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
-                </div>
-                <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
-                    <img onclick="redirectto()" src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                </div>
-            </div>
-        </div>
-    </div>
-    @endauth
-
-    @auth
-    <div class="categories_swiper__slider-block">
-        <div class="container">
-            <div class="swiper__main_blocks">
-                <h2 class="mb-3 mb-md-0">Silver Classes Videos For Intermediaters</h2>
-                <hr>
-                <div class="swiper bronze_videos mt-4">
-                    <div class="swiper-wrapper bronze_videos1">
-                        @php
-                            for($a = 0;$a < 4;$a++)
-                            {
-                                @endphp
-                                    <div class="swiper-slide">
-                                    
-                                            <div class="maz__swiper_slider_common_block">
-                                                <div class="maz__swiper_block_discipline-img">
-                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                    <div class="Play-btn">
-                                                        <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                </div>
-                                                <!-- <div class="logo-background">
-                                                <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                            </div> -->
-                                            </div>
-                                        
-                                    </div>
-                                @php
-                            }
-                        @endphp
-                    </div>
-                </div>
-                <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
-                    <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
-                </div>
-                <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
-                    <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                </div>
-            </div>
-        </div>
-    </div>
-    @else
-    <div class="categories_swiper__slider-block">
-        <div class="container">
-            <div class="swiper__main_blocks">
-                <h2 class="mb-3 mb-md-0">Silver Classes Videos For Intermediaters</h2>
-                <hr>
-                <div class="swiper bronze_videos mt-4">
-                    <div class="swiper-wrapper bronze_videos1">
-                        @php
-                            for($a = 0;$a < 4;$a++)
-                            {
-                                @endphp
-                                    <div class="swiper-slide">
-                                        <a href="{{ route('student.login') }}">
-                                            <div class="maz__swiper_slider_common_block">
-                                                <div class="maz__swiper_block_discipline-img">
-                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                    <div class="Play-btn">
-                                                        <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                </div>
-                                                <!-- <div class="logo-background">
-                                                <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                            </div> -->
-                                            </div>
-                                        </a>
-                                    </div>
-                                @php
-                            }
-                        @endphp
-                    </div>
-                </div>
-                <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
-                    <img onclick="redirectto()" src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
-                </div>
-                <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
-                    <img onclick="redirectto()" src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                </div>
-            </div>
-        </div>
-    </div>
-    @endauth
-    
-    @auth
-    <div class="categories_swiper__slider-block">
-        <div class="container">
-            <div class="swiper__main_blocks">
-                <h2 class="mb-3 mb-md-0">Silver Beltification<sup style="top: -1rem;font-size: 11px;">TM</sup> Videos For Intermediaters</h2>
-                <hr>
-                <div class="swiper bronze_videos mt-4">
-                    <div class="swiper-wrapper bronze_videos1">
-                        @php
-                            for($a = 0;$a < 4;$a++)
-                            {
-                                @endphp
-                                    <div class="swiper-slide">
-                                    
-                                            <div class="maz__swiper_slider_common_block">
-                                                <div class="maz__swiper_block_discipline-img">
-                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                    <div class="Play-btn">
-                                                        <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                </div>
-                                                <!-- <div class="logo-background">
-                                                <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                            </div> -->
-                                            </div>
-                                        
-                                    </div>
-                                @php
-                            }
-                        @endphp
-                    </div>
-                </div>
-                <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
-                    <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
-                </div>
-                <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
-                    <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                </div>
-            </div>
-        </div>
-    </div>
-    @else
-    <div class="categories_swiper__slider-block">
-        <div class="container">
-            <div class="swiper__main_blocks">
-                <h2 class="mb-3 mb-md-0">Silver Beltification<sup style="top: -1rem;font-size: 11px;">TM</sup> Videos For Intermediaters</h2>
-                <hr>
-                <div class="swiper bronze_videos mt-4">
-                    <div class="swiper-wrapper bronze_videos1">
-                        @php
-                            for($a = 0;$a < 4;$a++)
-                            {
-                                @endphp
-                                    <div class="swiper-slide">
-                                        <a href="{{ route('student.login') }}">
-                                            <div class="maz__swiper_slider_common_block">
-                                                <div class="maz__swiper_block_discipline-img">
-                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                    <div class="Play-btn">
-                                                        <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                </div>
-                                                <!-- <div class="logo-background">
-                                                <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                            </div> -->
-                                            </div>
-                                        </a>
-                                    </div>
-                                @php
-                            }
-                        @endphp
-                    </div>
-                </div>
-                <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
-                    <img onclick="redirectto()" src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
-                </div>
-                <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
-                    <img onclick="redirectto()" src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                </div>
-            </div>
-        </div>
-    </div>
-    @endauth
-
-    @auth
-    <div class="categories_swiper__slider-block">
-        <div class="container">
-            <div class="swiper__main_blocks">
-                <h2 class="mb-3 mb-md-0">Gold Teaching Videos For Experts</h2>
-                <hr>
-                <div class="swiper bronze_videos mt-4">
-                    <div class="swiper-wrapper bronze_videos1">
-                        @php
-                            for($a = 0;$a < 4;$a++)
-                            {
-                                @endphp
-                                    <div class="swiper-slide">
-                                    
-                                            <div class="maz__swiper_slider_common_block">
-                                                <div class="maz__swiper_block_discipline-img">
-                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                    <div class="Play-btn">
-                                                        <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                </div>
-                                                <!-- <div class="logo-background">
-                                                <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                            </div> -->
-                                            </div>
-                                        
-                                    </div>
-                                @php
-                            }
-                        @endphp
-                    </div>
-                </div>
-                <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
-                    <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
-                </div>
-                <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
-                    <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                </div>
-            </div>
-        </div>
-    </div>
-    @else
-    <div class="categories_swiper__slider-block">
-        <div class="container">
-            <div class="swiper__main_blocks">
-                <h2 class="mb-3 mb-md-0">Gold Teaching Videos For Experts</h2>
-                <hr>
-                <div class="swiper bronze_videos mt-4">
-                    <div class="swiper-wrapper bronze_videos1">
-                        @php
-                            for($a = 0;$a < 4;$a++)
-                            {
-                                @endphp
-                                    <div class="swiper-slide">
-                                        <a href="{{ route('student.login') }}">
-                                            <div class="maz__swiper_slider_common_block">
-                                                <div class="maz__swiper_block_discipline-img">
-                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                    <div class="Play-btn">
-                                                        <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                </div>
-                                                <!-- <div class="logo-background">
-                                                <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                            </div> -->
-                                            </div>
-                                        </a>
-                                    </div>
-                                @php
-                            }
-                        @endphp
-                    </div>
-                </div>
-                <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
-                    <img onclick="redirectto()" src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
-                </div>
-                <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
-                    <img onclick="redirectto()" src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                </div>
-            </div>
-        </div>
-    </div>
-    @endauth
-
-    @auth
-    <div class="categories_swiper__slider-block">
-        <div class="container">
-            <div class="swiper__main_blocks">
-                <h2 class="mb-3 mb-md-0">Gold Classes Videos For Experts</h2>
-                <hr>
-                <div class="swiper bronze_videos mt-4">
-                    <div class="swiper-wrapper bronze_videos1">
-                        @php
-                            for($a = 0;$a < 4;$a++)
-                            {
-                                @endphp
-                                    <div class="swiper-slide">
-                                    
-                                            <div class="maz__swiper_slider_common_block">
-                                                <div class="maz__swiper_block_discipline-img">
-                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                    <div class="Play-btn">
-                                                        <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                </div>
-                                                <!-- <div class="logo-background">
-                                                <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                            </div> -->
-                                            </div>
-                                        
-                                    </div>
-                                @php
-                            }
-                        @endphp
-                    </div>
-                </div>
-                <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
-                    <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
-                </div>
-                <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
-                    <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                </div>
-            </div>
-        </div>
-    </div>
-    @else
-    <div class="categories_swiper__slider-block">
-        <div class="container">
-            <div class="swiper__main_blocks">
-                <h2 class="mb-3 mb-md-0">Gold Classes Videos For Experts</h2>
-                <hr>
-                <div class="swiper bronze_videos mt-4">
-                    <div class="swiper-wrapper bronze_videos1">
-                        @php
-                            for($a = 0;$a < 4;$a++)
-                            {
-                                @endphp
-                                    <div class="swiper-slide">
-                                        <a href="{{ route('student.login') }}">
-                                            <div class="maz__swiper_slider_common_block">
-                                                <div class="maz__swiper_block_discipline-img">
-                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                    <div class="Play-btn">
-                                                        <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                </div>
-                                                <!-- <div class="logo-background">
-                                                <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                            </div> -->
-                                            </div>
-                                        </a>
-                                    </div>
-                                @php
-                            }
-                        @endphp
-                    </div>
-                </div>
-                <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
-                    <img onclick="redirectto()" src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
-                </div>
-                <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
-                    <img onclick="redirectto()" src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                </div>
-            </div>
-        </div>
-    </div>
-    @endauth
-
-    @auth
-    <div class="categories_swiper__slider-block">
-        <div class="container">
-            <div class="swiper__main_blocks">
-                <h2 class="mb-3 mb-md-0">Gold Beltification<sup style="top: -1rem;font-size: 11px;">TM</sup> Videos For Experts</h2>
-                <hr>
-                <div class="swiper bronze_videos mt-4">
-                    <div class="swiper-wrapper bronze_videos1">
-                        @php
-                            for($a = 0;$a < 4;$a++)
-                            {
-                                @endphp
-                                    <div class="swiper-slide">
-                                    
-                                            <div class="maz__swiper_slider_common_block">
-                                                <div class="maz__swiper_block_discipline-img">
-                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                    <div class="Play-btn">
-                                                        <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                </div>
-                                                <!-- <div class="logo-background">
-                                                <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                            </div> -->
-                                            </div>
-                                        
-                                    </div>
-                                @php
-                            }
-                        @endphp
-                    </div>
-                </div>
-            
-   
-                <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
-                    <img src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
-                </div>
-                <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
-                    <img src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                </div>
-            </div>
-        </div>
-    </div>
-    @else
-    <div class="categories_swiper__slider-block">
-        <div class="container">
-            <div class="swiper__main_blocks">
-                <h2 class="mb-3 mb-md-0">Gold Beltification<sup style="top: -1rem;font-size: 11px;">TM</sup> Videos For Experts</h2>
-                <hr>
-                <div class="swiper bronze_videos mt-4">
-                    <div class="swiper-wrapper bronze_videos1">
-                        @php
-                            for($a = 0;$a < 4;$a++)
-                            {
-                                @endphp
-                                    <div class="swiper-slide">
-                                        <a href="{{ route('student.login') }}">
-                                            <div class="maz__swiper_slider_common_block">
-                                                <div class="maz__swiper_block_discipline-img">
-                                                    <img src="{{asset('assets/front/images/download.jpeg')}}"  alt="">
-                                                    <div class="Play-btn">
-                                                        <i class="fa-regular fa-circle-play fa-2xl"></i>
-                                                    </div>
-                                                </div>
-                                                <div class="maz__swiper_block_discipline-content pb-2">
-                                                    <h6 style="font-weight:600;">Coming Soon</h6>
-
-                                                </div>
-                                                <!-- <div class="logo-background">
-                                                <img class="reward-logo" src="{{ asset('assets/front/images/rewards.png') }}">
-                                            </div> -->
-                                            </div>
-                                        </a>
-                                    </div>
-                                @php
-                            }
-                        @endphp
-                    </div>
-                </div>
-            
-   
-                <div class="category-swiper-button-next swiper-button-next maz__swiper_btn-next">
-                    <img onclick="redirectto()" src="{{ asset('assets/front/images/next.png') }}"  alt="arrows">
-                </div>
-                <div class="category-swiper-button-prev swiper-button-prev maz__swiper_btn-prev">
-                    <img onclick="redirectto()" src="{{ asset('assets/front/images/previous.png') }}"  alt="arrows">
-                </div>
-            </div>
-        </div>
-    </div>
-    @endauth--}}
 </section>
 
 
@@ -5963,16 +6111,106 @@
         }
     </script>
     <script>
-        var video_id = $('#video_id').val();
-        window._wq = window._wq || [];
+        if((is_dacast_video == 1) && (CONTENT_ID !='')){
+            var myPlayer = dacast(CONTENT_ID, 'bio-demo-dacast-video-player', { 
+                width: '100%', 
+                height: 700,
+                // player: "flow7"
+            });
+        }
+        else{
+            var video_id = $('#video_id').val();
+            window._wq = window._wq || [];
 
-        _wq.push({ id: video_id, onReady: function(video) {
+            _wq.push({ id: video_id, onReady: function(video) {
 
-            if(video.height() > 627)
-            {
-                video.height(627);
+                if(video.height() > 627)
+                {
+                    video.height(627);
+                }
+            }});
+        }
+
+        $("button.view-more-school-btn").click(function(){
+            var $this = $(this);
+            if($this.text() == 'View All'){
+                $('div.load-more-school-content').show();
+                $this.text('Hide');
             }
-        }});
+            else{
+                $('div.load-more-school-content').hide();
+                $this.text('View All');
+            }
+        });
+
+        total_levels = parseInt("{{ count($levels) }}");
+        for(j=0;j< total_levels; j++){
+            var swiper2 = new Swiper(".custom-swiper"+j, {
+                slidesPerView: 1,
+                spaceBetween: 20,
+                cssMode: true,
+                navigation: {
+                    nextEl: ".category-swiper-button-next-"+j,
+                    prevEl: ".category-swiper-button-prev-"+j,
+                },
+                lazy: {
+                    loadPrevNext: true,
+                },
+                breakpoints: {
+                    0: {
+                        slidesPerView: 1,
+                        spaceBetween: 20,
+                    },
+                    768: {
+                        slidesPerView: 2,
+                        spaceBetween: 24,
+                    },
+                    1024: {
+                        slidesPerView: 3,
+                        spaceBetween: 24,
+                    },
+                    1440: {
+                        slidesPerView: 4,
+                    },
+                },
+            });
+        }
+
+        // /*
+            var total_under_levels = $('.load-more-school-content .categories_swiper__slider-block .swiper__main_blocks .swiper').length
+            console.log(total_under_levels);
+            for(j=0;j< total_under_levels; j++){
+                var swiper2 = new Swiper(".load-more-school-content .categories_swiper__slider-block .swiper__main_blocks .swiper.swiper-within-custom-swiper"+j, {
+                    slidesPerView: 1,
+                    spaceBetween: 20,
+                    cssMode: true,
+                    navigation: {
+                        nextEl: ".under-category-swiper-button-next-"+j,
+                        prevEl: ".under-category-swiper-button-prev-"+j,
+                    },
+                    lazy: {
+                        loadPrevNext: true,
+                    },
+                    breakpoints: {
+                        0: {
+                            slidesPerView: 1,
+                            spaceBetween: 20,
+                        },
+                        768: {
+                            slidesPerView: 2,
+                            spaceBetween: 24,
+                        },
+                        1024: {
+                            slidesPerView: 3,
+                            spaceBetween: 24,
+                        },
+                        1440: {
+                            slidesPerView: 4,
+                        },
+                    },
+                });
+            }
+        // */
     </script>
     
 @endpush

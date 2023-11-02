@@ -13,6 +13,8 @@ use App\Http\Controllers\Admin\SubscriptionPlanController;
 use App\Http\Controllers\Admin\SubscriptionBenefitsController;
 use App\Http\Controllers\Admin\PromocodeController;
 use App\Http\Controllers\Admin\BannerChangeController;
+use App\Http\Controllers\Admin\AllTabPasswordController;
+use App\Http\Controllers\Admin\FaqController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -23,7 +25,7 @@ use App\Http\Controllers\Admin\BannerChangeController;
 | contains the "web" middleware group. Now create something great!
 |
 */
-
+Route::middleware('is-verified-to-access')->group(function () {
 $appRoutes = function () {
     Route::get('/', function () {
         return redirect('admins/dashboard');
@@ -129,6 +131,9 @@ $appRoutes = function () {
         Route::get('instructor', [InstructorController::class, 'index'])->name('instructor.index');
         Route::get('instructor/{id}/info', [InstructorController::class, 'showinfo'])->name('instructor.info');
         Route::get('instructor/{id}/{type}', [InstructorController::class, 'status'])->name('admin.instructor.status');
+        Route::get('instructor/display-order', [InstructorController::class, 'instructorDisplayOrder'])->name('admin.instructor.displayorder');
+        Route::get('instructor/fetch/discipline/{discipline_id}', [InstructorController::class, 'instructorFetchDisciplineData'])->name('instructor.discipline.fetchdata');
+        Route::post('instructor/save-display-order', [InstructorController::class, 'saveDisplayOrder'])->name('instructor.save.display.order');
 
         //disciplines Routes
         Route::get('discipline/datatable', [DisciplineController::class, 'getDatatable'])->name('admin.discipline.datatable');
@@ -139,8 +144,25 @@ $appRoutes = function () {
         Route::put('discipline/{id}', [DisciplineController::class, 'update'])->name('admin.discipline.update');
         Route::delete('discipline/{id}', [DisciplineController::class, 'delete'])->name('deletediscipline');
         Route::post('discipline/photo/upload', [DisciplineController::class, 'uploadphoto'])->name('discipline.uploadphoto');
+        Route::get('discipline/display-order', [DisciplineController::class, 'disciplineDisplayOrder'])->name('admin.discipline.displayorder');
+        Route::post('discipline/save-display-order', [DisciplineController::class, 'saveDisplayOrder'])->name('discipline.save.display.order');
+        
+        // faq
+        Route::get('faq/', [FaqController::class, 'index'])->name('faq.index');
+        Route::get('faq/create/{parent_id}', [FaqController::class, 'create'])->name('faq.create');
+        Route::post('faq/store/faq-heading', [FaqController::class, 'storeFaqHeading'])->name('faq.store.heading.data');
+        Route::get('faq/edit/{faq_id}', [FaqController::class, 'editFaqHeading'])->name('faq.edit');
+        Route::post('faq/update/faq-heading', [FaqController::class, 'updateFaqHeading'])->name('faq.update.heading.data');
+        Route::get('faq/delete/faq-heading/{id}', [FaqController::class, 'deleteFaqHeading'])->name('faq.delete.heading.data');
+        Route::post('store-faq-heading', [FaqController::class, 'storeFaq'])->name('store.faq.heading');
+        Route::get('faq-edit/{id}', [FaqController::class, 'showEditFaq'])->name('edit.faq.heading');
+        Route::post('post-faq-heading', [FaqController::class, 'updateFaq'])->name('post.faq.heading');
 
+        // all tab password
+        Route::get('all-tab-password', [AllTabPasswordController::class, 'index'])->name('all.tab.password');
+        Route::post('all-tab-password', [AllTabPasswordController::class, 'updatePassword'])->name('post.all.tab.password');
     });
 };
 
-Route::group(array('prefix' => "admins", "namespace" => "Admin", "as" => "admin::"), $appRoutes);
+    Route::group(array('prefix' => "admins", "namespace" => "Admin", "as" => "admin::"), $appRoutes);
+});

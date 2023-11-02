@@ -55,71 +55,80 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('verifyPromocode', [StudentController::class, 'verifyPromocode'])->name('verifyPromocode');
     Route::post('cancelUpgradePlan', [StudentController::class, 'cancelUpgradePlan'])->name('cancelUpgradePlan');
 
-    Route::get('/bronzePlanStripe', function (){
+    // Route::get('/bronzePlanStripe', function (){
 
-        Session::pull("sendUpgradeConfirmEmail");
+    //     Session::pull("sendUpgradeConfirmEmail");
 
-        if(request()->sendUpgradeConfirmEmail)
-        {
-            Session::pull("sendUpgradeConfirmEmail");
-            Session::put("sendUpgradeConfirmEmail",request()->sendUpgradeConfirmEmail);
+    //     if(request()->sendUpgradeConfirmEmail)
+    //     {
+    //         Session::pull("sendUpgradeConfirmEmail");
+    //         Session::put("sendUpgradeConfirmEmail",request()->sendUpgradeConfirmEmail);
 
-            $sendUpgradeConfirmEmail = request()->sendUpgradeConfirmEmail;
-        }
-        else
-        {
-            Session::pull("sendUpgradeConfirmEmail");
-            Session::put("sendUpgradeConfirmEmail",0);
-        }
+    //         $sendUpgradeConfirmEmail = request()->sendUpgradeConfirmEmail;
+    //     }
+    //     else
+    //     {
+    //         Session::pull("sendUpgradeConfirmEmail");
+    //         Session::put("sendUpgradeConfirmEmail",0);
+    //     }
 
-        $benefits = array();
+    //     $benefits = array();
 
-        if(request()->lastPage)
-        {
-            Session::pull("lastPage");
+    //     if(request()->lastPage)
+    //     {
+    //         Session::pull("lastPage");
             
-            Session::put('lastPage',request()->lastPage);
-        }
+    //         Session::put('lastPage',request()->lastPage);
+    //     }
         
-        if(request()->planId)
-        {
-            $planDetails = SubscriptionPlan::where('id',request()->planId)->first();
+    //     if(request()->planId)
+    //     {
+    //         $planDetails = SubscriptionPlan::where('id',request()->planId)->first();
 
-            $planBenefits = explode(",",$planDetails->benefits);
+    //         $planBenefits = explode(",",$planDetails->benefits);
 
-            $benefits = array();
+    //         $benefits = array();
 
-            if(!empty($planBenefits))
-            {
-                foreach($planBenefits as $benefit)
-                {
-                    $benefitTitle = SubscriptionBenefit::where('id',$benefit)->first();
+    //         if(!empty($planBenefits))
+    //         {
+    //             foreach($planBenefits as $benefit)
+    //             {
+    //                 $benefitTitle = SubscriptionBenefit::where('id',$benefit)->first();
 
-                    if($benefitTitle)
-                    {
-                        $benefits[] = $benefitTitle->benefit;
-                    }
+    //                 if($benefitTitle)
+    //                 {
+    //                     $benefits[] = $benefitTitle->benefit;
+    //                 }
                 
-                }
-            }
+    //             }
+    //         }
 
-            User::where('id',Auth::id())->update([ 
-                'subscription_id'=>request()->planId,
-                'payment_status'=>0,
-                'payment_reminder'=>0,
-                'upgrade_plan'=>1,
-                'plan_upgraded_date'=>date("Y-m-d")
-            ]);
-        }
-        else
-        {
-            $planDetails = SubscriptionPlan::where('id',2)->first();
-        }
+    //         User::where('id',Auth::id())->update([ 
+    //             // 'subscription_id'=>request()->planId,
+    //             'payment_status'=>0,
+    //             'payment_reminder'=>0,
+    //             'upgrade_plan'=>1,
+    //             'plan_upgraded_date'=>date("Y-m-d")
+    //         ]);
+    //     }
+    //     else
+    //     {
+    //         $planDetails = SubscriptionPlan::where('id',2)->first();
+    //     }
         
-        $ifPaymentFail = 0; 
+    //     $ifPaymentFail = 0; 
         
-        return view('bronzePlanStripe',compact('planDetails','benefits','ifPaymentFail'));
-    })->name('bronzePlanStripe');
+    //     // dd($planDetails->toArray());
+
+    //     return view('bronzePlanStripe',compact('planDetails','benefits','ifPaymentFail'));
+    // })->name('bronzePlanStripe');
+
+    // stripe payment
+    Route::get('/bronzePlanStripe', [StudentController::class, 'bronzePlanStripe'])->name('bronzePlanStripe');
+    Route::get('checkoutPlanStripe/{planId}', [StudentController::class, 'checkoutPlanStripe'])->name('checkoutPlanStripe');
+    Route::get('payment-success', [StudentController::class, 'successHandler'])->name('success.stripe');
+    Route::get('payment-error', [StudentController::class, 'errorHandler'])->name('error.stripe');
+
 
     Route::post('sendReferralEmail', [StudentController::class, 'sendReferralEmail'])->name('sendReferralEmail');
     Route::post('changeIsFirstTimeUserFlag', [StudentController::class, 'changeIsFirstTimeUserFlag'])->name('changeIsFirstTimeUserFlag');

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Instructor;
+use App\Models\Discipline;
+use App\Models\InstructorDiscipline;
 use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Config;
@@ -83,4 +85,56 @@ class InstructorController extends Controller
         }
         return response()->json($response);
     }
+
+
+    public function instructorDisplayOrder(Request $request){
+        $disciplines = Discipline::orderBy('title','ASC')->get();
+        // dd($disciplines->toArray());
+        return view('admin.instructor.display_index', compact('disciplines'));
+    }
+
+    
+    public function instructorFetchDisciplineData($discipline_id){
+        $discipline = Discipline::select('title', 'description', 'photo','desktop_sequence','main_coming_soon_image', 'video_coming_soon_image')->where('id',$discipline_id)->first();
+
+        if($discipline){
+
+            $instructorDisciplines = InstructorDiscipline::where('discipline_id',$discipline_id)->get();
+
+            $instructor_ids = array_map(function($item){
+                return $item['instructor_id'];
+            },$instructorDisciplines->toArray());
+
+            if(count($instructor_ids) > 0){
+
+                $instructorDBData = Instructor::where('is_approved', '=', 1)->whereIn('id',$instructor_ids)->orderBy('display_order','ASC')->get();
+                // dd($instructorDBData->toArray());
+
+                $html = view('admin.instructor.display_view',compact('discipline','instructorDBData'))->render();
+                return response()->json(['status' => 'success', 'html' => $html]);
+            }
+            else{
+                return response()->json(['status' => 'error', 'message' =>'Instructors not found, Please try with another']);
+            }
+        }
+        else{
+            return response()->json(['status' => 'error', 'message' =>'Discipline not found, Please try with another']);
+        }
+    }
+
+    public function saveDisplayOrder(Request $request){
+        // dd($request->all());
+
+        $order = 0;
+        $disciplines = explode(',',$request->order);
+        foreach($disciplines as $key => $discipline){
+            $d = Instructor::where('id',$discipline)->update(['display_order' => $order]);
+            if($d){
+                $order++;
+            }
+        }
+
+        return redirect()->back()->with('success', 'Display order saved successfully');
+    }
+
 }

@@ -34,6 +34,11 @@ return [
     */
 
     'mailers' => [
+
+        'sendgrid' => [
+            'transport' => 'sendgrid',
+        ],
+
         'smtp' => [
             'transport' => 'smtp',
             'host' => env('MAIL_HOST', 'smtp.mailgun.org'),
@@ -92,6 +97,7 @@ return [
     */
 
     'from' => [
+        // 'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],

@@ -52,4 +52,10 @@ return [
     'wistia' => [
         'token' => env('WISTIA_ACCESS_TOKEN'),
     ],
+    'sendgrid' => [
+        'api_key' => env('SENDGRID_API_KEY'),
+    ],
+    'dacast' => [
+        'api_key' => env('DACAST_API_KEY'),
+    ],
 ];

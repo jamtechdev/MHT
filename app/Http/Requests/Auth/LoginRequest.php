@@ -32,7 +32,7 @@ class LoginRequest extends FormRequest
             // 'email' => ['required', 'string', 'email', 'exists:users,email,is_block,0'],
             'email' => ['required', 'string', 'email', 'exists:users,email'],
             'password' => ['required', 'string'],
-            'g-recaptcha-response' => 'required|recaptchav3:login,0.5',
+            // 'g-recaptcha-response' => 'required|recaptchav3:login,0.5',
         ];
     }
 
